@@ -1,0 +1,36 @@
+import { Routes, Route } from 'react-router-dom';
+import Dashboard from './pages/dashboard.jsx';
+import HtmlPreview from './components/agent/htmlpreview.jsx';
+import ProtectedRoute from './Protected.jsx';
+import Devices from './components/devices/device.jsx';
+import ProtectedLayout from './ProtectedLayout.jsx';
+import NotifyProvider from './components/Device-IDE/notify.jsx';
+import { Router } from 'lucide-react';
+import MonitorDash from './pages/monitor.jsx';
+import Landing from './components/landing/landing.jsx';
+import Agent from './components/agent/agent.jsx';
+import CarController from './pages/carController.jsx';
+import FailedRoute from './failedroute.jsx';
+import AuthPage from './pages/Login.jsx';
+
+export default function App() {
+  return (
+    <NotifyProvider>
+      <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<AuthPage />} />
+          <Route element={<ProtectedRoute/>}>
+            <Route element={<ProtectedLayout />}>
+              <Route path="/dashboard" element={<Dashboard />}/>
+              <Route path="/devices" element={<Devices />}/>
+              <Route path="/codePreview" element={<HtmlPreview />}/>
+              <Route path="/commands" element={<MonitorDash/>} />
+              <Route path="/agent" element={<Agent/>} />
+              <Route path="/settings" element={<CarController/>}/>
+            </Route>
+          </Route>
+          <Route path="*" element={<FailedRoute />} />
+      </Routes>
+    </NotifyProvider>
+  )
+}

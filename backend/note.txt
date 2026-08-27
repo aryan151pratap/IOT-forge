@@ -1,0 +1,55 @@
+                    Internet
+                        │
+        ┌───────────────┴───────────────┐
+        │                               │
+        │        Python Backend         │
+        │   (FastAPI WebSocket Server)  │
+        │                               │
+        └───────┬───────────────┬───────┘
+                │               │
+        WebSocket           WebSocket
+                │               │
+         React Frontend       ESP32
+      (Browser Anywhere)  (WiFi Anywhere)
+
+
+
+project name -> [ IoT Device Management Platform ]
+
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+
+token optimize (means how to reduce tokens in multiagent system)
+latency (reduce lateny ??)
+llm gateway ?? work ?? (smart routing & fall back mechanism what is this ??)
+
+llm/agent evaluations (campusx)
+llm rag evaluation (Dat Ngo)
+guradrails with langchain (krish naik) or llm gateways
+model armor: security ai deployments
+how to deploy an ai agent to cloud run (google cloud tech)
+article (dynamic tool output compression)
+
+⚡ EdgePilot
+│
+├── Overview
+├── Devices
+├── Sensors
+├── Commands
+├── Automations
+├── Logs
+│
+├── Device IDE
+├── AI Assistant
+│
+└── Settings
+
+// devices/{device_id} hhtp requests with websocket between esp32
+
+React makes HTTP request.
+FastAPI creates a unique request_id.
+FastAPI sends that request_id to the ESP32 through the existing WebSocket.
+ESP32 sends the response back with the same request_id.
+Your single WebSocket receive loop sees the response.
+It finds the matching request_id and resolves the waiting HTTP request.
+FastAPI returns that ESP32 response to React.

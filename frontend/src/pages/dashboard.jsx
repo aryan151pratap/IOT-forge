@@ -1,0 +1,68 @@
+import { useEffect, useRef, useState } from "react";
+import Editor from "./editor.jsx";
+import Agent from "../components/agent/agent.jsx";
+import { handleMouseDown } from "../services/silde.js";
+import { useAuth } from "../AuthContext.jsx";
+import { userData } from "../services/user.js";
+
+const Dashboard = () => {
+    const [agentWidth, setAgentWidth] = useState(300);
+    const [userdata, setUserdata] = useState(null);
+
+    const containerRef = useRef(null);
+    const data = useAuth();
+
+    useEffect(() => {
+        if (!data?.user?.user_id) return;
+        const getData = async () => {
+            try {
+                const user = await userData(data.user.user_id);
+
+                if (user) {
+                    setUserdata(user);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        getData();
+    }, [data?.user?.user_id]);
+
+    return (
+        <div
+            ref={containerRef}
+            className="z-2 flex flex-row h-full min-h-0 min-w-0 w-full overflow-hidden"
+        >
+            <div className="h-full z-10 min-h-0 min-w-0 flex-1 overflow-hidden">
+                <Editor user={userdata} />
+            </div>
+
+            <div
+                className="group h-full w-2 p-0.5 flex justify-center cursor-col-resize border-l border-zinc-800 bg-[#0d0d0f]"
+                onMouseDown={(e) =>
+                    handleMouseDown(
+                        e,
+                        containerRef,
+                        setAgentWidth
+                    )
+                }
+            >
+                <div className="h-full w-0.5 rounded-md group-hover:bg-orange-500/70" />
+            </div>
+
+            <div
+                className="h-full flex flex-col rounded-md"
+                style={{ width: `${agentWidth}px` }}
+            >
+                <div className="h-2 bg-[#0d0d0f]"></div>
+                <div className="h-full border border-zinc-900 rounded-md overflow-hidden">
+                    <Agent />
+                </div>
+                <div className="h-2 bg-[#0d0d0f]"></div>
+            </div>
+            <div className="w-2 h-full bg-[#0d0d0f]"></div>
+        </div>
+    );
+};
+
+export default Dashboard;

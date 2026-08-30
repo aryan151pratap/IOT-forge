@@ -66,7 +66,7 @@ const WriteFile = function ({ activeFile, currentDevice, setFileTrigger }) {
 				<button
 					onClick={handleSave}
 					disabled={!activeFile || saving}
-					className="text-sm px-2 p-2 bg-zinc-700/80 text-zinc-400 hover:bg-purple-500/80 hover:text-white cursor-pointer rounded disabled:opacity-80 disabled:cursor-not-allowed border-l border-zinc-800"
+					className="text-xs px-2 p-2 bg-zinc-500/30 text-zinc-400 hover:bg-purple-500/80 hover:text-white cursor-pointer rounded disabled:opacity-80 disabled:cursor-not-allowed border-l border-zinc-800"
 				>
 					{saving ? "Saving..." : "Save"}
 				</button>

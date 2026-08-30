@@ -1,9 +1,9 @@
 import { Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
-import Header from "./components/header.jsx";
 import SideBar from "./pages/SideBar.jsx";
 import { useAuth } from "./AuthContext.jsx";
 import { userData } from "./services/user.js";
+import Header from "./pages/header.jsx";
 
 export default function ProtectedLayout() {
     const [showSideBar, setShowSideBar] = useState(true);
@@ -25,7 +25,7 @@ export default function ProtectedLayout() {
     return (
         <div className="flex h-screen w-full flex-col overflow-hidden bg-[#09090b]">
             <div className="shrink-0">
-                <Header setShowSideBar={setShowSideBar} />
+                <Header setShowSideBar={setShowSideBar} user={user}/>
             </div>
 
             <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">

@@ -1,6 +1,6 @@
 import { CiMenuBurger, CiMicrochip } from "react-icons/ci";
 
-const Header = function({setShowSideBar}){
+const Header = function({setShowSideBar, user}){
 	return(
 		<div className="w-full bg-black flex border-b border-zinc-800">
 
@@ -22,9 +22,9 @@ const Header = function({setShowSideBar}){
 					</span>
 				</div>
 				<div className="text-white text-lg font-bold">IoT Dashboard</div>
-				<div className="flex items-center gap-4">
-					<button className="text-white">Profile</button>
-					<button className="text-white">Logout</button>
+				<div className="text-sm flex items-center gap-2">
+					<button className="text-white bg-zinc-500/40 text-zinc-300 hover:bg-purple-500/80 hover:text-white px-2 p-1">Profile</button>
+					<button className="text-white bg-zinc-500/40 text-zinc-300 px-2 p-1 hover:bg-white hover:text-black">Logout</button>
 				</div>
 			</div>
 			<div className=""></div>

@@ -15,7 +15,7 @@ class Terminal:
     CANCEL_TIMEOUT_MS = 3000
 
     def __init__(self):
-        self.exec_globals = {"os": os, "machine": machine, "print": self._sync_print}
+        self.exec_globals = {"os": os, "machine": machine, "print": self._sync_print, "run": self._run_file}
         self._queue = []
         self._lock = _thread.allocate_lock()
         self._running = False
@@ -25,8 +25,13 @@ class Terminal:
         self._request_type = None
 
     def reset(self):
-        self.exec_globals = {"os": os, "machine": machine, "print": self._sync_print}
+        self.exec_globals = {"os": os, "machine": machine, "print": self._sync_print, "run": self._run_file}
         self._queue = []
+
+    def _run_file(self, path):
+        with open(path) as f:
+            source = f.read()
+        exec(compile(source, path, "exec"), self.exec_globals, self.exec_globals)
 
     def _push(self, item, ignore_stop=False):
         while True:

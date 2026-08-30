@@ -26,7 +26,7 @@ const FileHeader = function ({files, openExplorer, setOpenExplorer, activeFile, 
 				</button>
 			)}
 			<div className="w-full flex flex-row h-full items-center">
-				<div className="h-full items-center flex flex-row text-white text-sm text-zinc-200 overflow-auto dark-scrollbar">
+				<div className="h-full items-center flex flex-row text-white text-sm text-zinc-200 overflow-auto hide-scrollbar">
 					{activesFiles.map((i, index) => (
 						<div key={index} className={`h-full items-center flex gap-2 px-2 cursor-pointer ${activeFile?.name == i.name ? "bg-orange-400/10 border-t-2 border-orange-500" : "hover:bg-zinc-400/10 border-r border-zinc-800 text-zinc-400 hover:text-white"}`}
 							onClick={() => setActiveFile(i)}
@@ -43,7 +43,7 @@ const FileHeader = function ({files, openExplorer, setOpenExplorer, activeFile, 
 						</div>
 					))}
 				</div>
-				<div className="p-2 ml-auto flex flex-row gap-2">
+				<div className="h-full border-l border-zinc-500/20 p-1.5 ml-auto flex flex-row gap-2">
 					<button 
 						className="flex flex-row items-center gap-2 text-zinc-400 bg-zinc-500/20 text-xs px-2 p-1 hover:bg-purple-500/70 hover:text-white capitalize"
 						onClick={() => handleReconnect()}

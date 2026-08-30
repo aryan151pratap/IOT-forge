@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { CiFileOn, CiMenuBurger } from "react-icons/ci";
-import { FiTerminal } from "react-icons/fi";
+import { FiRefreshCcw, FiTerminal } from "react-icons/fi";
 import { VscClose, VscFileCode, VscPython } from "react-icons/vsc";
 
-const FileHeader = function ({files, openExplorer, setOpenExplorer, activeFile, setActiveFile, setOpenTerminal}) {
+const FileHeader = function ({files, openExplorer, setOpenExplorer, activeFile, setActiveFile, setOpenTerminal, handleReconnect}) {
 	
 	const [activesFiles, setActivesFiles] = useState([]);
 	useEffect(() => {
@@ -15,7 +15,7 @@ const FileHeader = function ({files, openExplorer, setOpenExplorer, activeFile, 
 	}, [activeFile])
 
 	return (
-		<div className="flex h-10 items-center border-b border-zinc-800 bg-[#0d0d0f]">
+		<div className="w-full flex h-10 items-center border-b border-zinc-800 bg-[#0d0d0f]">
 			{!openExplorer && (
 				<button
 					onClick={() => setOpenExplorer(true)}
@@ -43,11 +43,20 @@ const FileHeader = function ({files, openExplorer, setOpenExplorer, activeFile, 
 						</div>
 					))}
 				</div>
-				<div className={'ml-auto h-full text-sm text-white px-2 flex flex-row items-center gap-1 border-l border-zinc-800 hover:bg-zinc-300/10 cursor-pointer'}
-					onClick={() => setOpenTerminal(e => !e)}
-				>
-					<FiTerminal className=""/>
-					<span>Terminal</span>
+				<div className="p-2 ml-auto flex flex-row gap-2">
+					<button 
+						className="flex flex-row items-center gap-2 text-zinc-400 bg-zinc-500/20 text-xs px-2 p-1 hover:bg-purple-500/70 hover:text-white capitalize"
+						onClick={() => handleReconnect()}
+					>
+						<FiRefreshCcw/>
+						<span>reconnect</span>
+					</button>
+					<button className={'ml-auto h-full text-xs text-white px-2 p-1.5 flex flex-row items-center gap-1 bg-zinc-500/20 hover:bg-purple-500/80 hover:text-white text-zinc-400 cursor-pointer'}
+						onClick={() => setOpenTerminal(e => !e)}
+					>
+						<FiTerminal className=""/>
+						<span>Terminal</span>
+					</button>
 				</div>
 			</div>
 		</div>

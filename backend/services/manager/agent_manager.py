@@ -8,7 +8,9 @@ class AgentManager:
 
     def get_agent(self, user_id: int):
         if user_id not in self.agents:
-            self.agents[user_id] = Agent()
+            agent = Agent()
+            agent.create_agent()
+            self.agents[user_id] = agent
 
         return self.agents[user_id]
 

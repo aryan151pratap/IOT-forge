@@ -50,7 +50,7 @@ async def handle_filesystem(data, dashboard_ws):
         })
         return
 
-    if operation not in ["list_folder", "read_file"]:
+    if operation not in ["list_folder", "read_file", "write_file_start", "write_file", "write_file_end", "create", "delete"]:
         await dashboard_ws.send_json({
             "type": "error",
             "data": f"Unknown filesystem operation: {operation}"
@@ -64,13 +64,12 @@ async def handle_filesystem(data, dashboard_ws):
         dashboard_ws
     )
     try:
-        await device_ws.send_json({
-            "type": data.get("type"),
+        send_data = {
+            **data,
             "request_id": request_id,
             "request_type": "ws",
-            "path": path,
-            "operation": operation
-        })
+        }
+        await device_ws.send_json(send_data)
         
     except Exception:
         dashboard_manager.cancel_request(request_id)

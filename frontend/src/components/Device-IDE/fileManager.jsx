@@ -1,6 +1,8 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { FaTrash } from "react-icons/fa";
 import { FiChevronDown, FiChevronRight } from "react-icons/fi";
 import { VscFileCode, VscFolder, VscFolderOpened, VscJson, VscMarkdown, VscPython } from "react-icons/vsc";
+import { handleDeleteDevice } from "../../hooks/fileHandle";
 
 function joinPath(parentPath, name) {
 	if (!parentPath || parentPath === "/") return `/${name}`;
@@ -37,10 +39,14 @@ export default function FileManager({
 	currentFolder,
 	onFolderChange,
 	onLoadFolder,
+	handleDelete
 }) {
 	const [expanded, setExpanded] = useState(() => new Set(["/"]));
 	const [loadedChildren, setLoadedChildren] = useState({});
 	const [loadingPaths, setLoadingPaths] = useState(() => new Set());
+	useEffect(() => {
+		setLoadedChildren({});
+	}, [files]);
 
 	const activePath = typeof activeFile === "string" ? activeFile : activeFile?.path;
 
@@ -88,6 +94,8 @@ export default function FileManager({
 		onFolderChange?.(getParentPath(node.path));
 	};
 
+	
+
 	const renderNode = (rawNode, parentPath, depth) => {
 		const path = rawNode.path || joinPath(parentPath, rawNode.name);
 		const node = { ...rawNode, path };
@@ -102,7 +110,6 @@ export default function FileManager({
 		return (
 			<div key={path}>
 				<div
-					onClick={() => handleSelect(node)}
 					style={{ paddingLeft: depth * 14 + 8 }}
 					title={path}
 					className={`group flex h-6 cursor-pointer items-center gap-1.5 pr-2 text-[13px] transition ${
@@ -131,9 +138,18 @@ export default function FileManager({
 						</>
 					)}
 
-					<span className="truncate">{node.name}</span>
+					<span className="truncate w-full"
+						onClick={() => handleSelect(node)}
+					>{node.name}</span>
 
 					{isLoading && <span className="ml-auto text-[10px] text-zinc-600">loading…</span>}
+					{(!isFolder || (isFolder && isOpen && children == undefined)) &&
+					<div className="opacity-0 group-hover:opacity-90 p-1 hover:text-red-500/80 transition text-zinc-500/50 ml-auto"
+						onClick={() => handleDelete(node.path)}
+					>
+						<FaTrash/>
+					</div>
+					}
 				</div>
 
 				{isFolder && isOpen && children !== undefined && (
@@ -155,7 +171,9 @@ export default function FileManager({
 	};
 
 	if (!files || files.length === 0) {
-		return <div className="px-3 py-2 text-[12px] text-zinc-600">No files</div>;
+		return <div className="text-[12px] text-white/80 px-1 p-2">
+			<span className="bg-purple-500/50 px-2 p-1">No files</span>
+		</div>;
 	}
 
 	return <div className="py-1">{sortEntries(files).map((node) => renderNode(node, "/", 0))}</div>;

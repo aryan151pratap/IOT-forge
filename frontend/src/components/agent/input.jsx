@@ -71,11 +71,11 @@ const AgentInput = ({ value, onChange, onSend, connected, models, connectionStat
 					>
 						<FiPaperclip size={17} />
 					</button>
-					<div className="flex flex-wrap gap-1 items-end px-4 overflow-auto dark-scrollbar mr-2">
-						<div className={`flex flex-row gap-1 items-center rounded capitalize text-xs px-2 p-1 ${connected ? "text-green-500 bg-green-400/10" : "text-red-500 bg-red-400/10"}`}>
+					<div className="flex flex-wrap gap-1 items-end px-4 overflow-auto hide-scrollbar mr-2">
+						<div className={`flex flex-row gap-1 justify-center capitalize text-[10px] px-2 p-1 ${connected ? "text-green-400 bg-green-500/20" : "text-red-500 bg-red-400/10"}`}>
 						    <span>
 								{connected ?
-								<BsWifi className="h-4 w-4"/>
+								<BsWifi className="h-3 w-3"/>
 								:
 								<BsWifiOff className="h-4 w-4"/>
 							    }

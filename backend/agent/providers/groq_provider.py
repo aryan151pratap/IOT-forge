@@ -1,6 +1,6 @@
 import os
-from groq import AsyncGroq
 from dotenv import load_dotenv
+from langchain_groq import ChatGroq
 
 load_dotenv()
 
@@ -8,23 +8,12 @@ load_dotenv()
 class GroqProvider:
 
     def __init__(self):
-        self.client = AsyncGroq(
-            api_key=os.getenv("GROQ_API_KEY")
-        )
+        self.api_key = os.getenv("GROQ_API_KEY")
 
-    async def stream(self, message, model):
-        return await self.client.chat.completions.create(
+    def get_llm(self, model):
+        return ChatGroq(
             model=model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": message
-                }
-            ],
-            max_completion_tokens=7000,
-            stream=True
+            groq_api_key=self.api_key,
+            temperature=0.5,
+            max_tokens=7000
         )
-
-    async def model_list(self):
-        models = await self.client.models.list()
-        return [model.id for model in models.data]

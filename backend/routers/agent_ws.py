@@ -21,8 +21,6 @@ async def agent_websocket(websocket: WebSocket):
 
             await agent.stream(
                 "Greet the user briefly. Just say hello and ask how you can help.",
-                agent.provider,
-                agent.model,
                 websocket
             )
 

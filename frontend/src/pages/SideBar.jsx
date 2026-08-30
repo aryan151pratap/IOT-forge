@@ -79,9 +79,9 @@ const SideBar = ({ user }) => {
                         key={index}
                         className="flex h-fit flex-col gap-2"
                     >
-                        <div className="flex items-center gap-2 px-4 p-2 text-sm font-semibold uppercase text-zinc-500">
+                        <div className="flex items-center gap-2 px-2 p-2 text-sm font-semibold uppercase text-zinc-500">
                             <span className="text-lg text-orange-500">
-                                {section.icon}
+                                {/* {section.icon} */}
                             </span>
                             <span>
                                 {section.name}
@@ -91,7 +91,7 @@ const SideBar = ({ user }) => {
                         <div className="flex h-full flex-row px-2">
                             <div className="h-full bg-orange-300">
                             </div>
-                            <div className="ml-6 w-full">
+                            <div className="ml-4 w-full">
                                 {section.items.map((item) => {
                                     const active =
                                         location.pathname === item.path;

@@ -39,10 +39,10 @@ export default function HtmlPreview({setCodePreview}) {
     };
 
     return (
-        <div className={`${expand ? "fixed inset-0 bg-black top-0 w-full h-full z-50" : "p-2"} h-full w-full min-h-0 flex flex-col gap-2 overflow-auto`}>
+        <div className={`${expand ? "fixed inset-0 bg-black top-0 w-full h-full z-50" : ""} h-full w-full min-h-0 flex flex-col gap-2 overflow-auto`}>
 
             <div className="h-full w-full min-h-0 flex flex-col border border-zinc-800 bg-zinc-800/50 rounded-lg overflow-hidden">
-                <div className="shrink-0 flex w-full gap-1 border-b border-zinc-800 p-1">
+                <div className="shrink-0 flex w-full gap-1 border-b border-zinc-800 p-1 overflow-auto hide-scrollbar">
                     <button
                         className="border border-zinc-800 flex items-center text-xs bg-zinc-500/20 rounded hover:bg-zinc-500/20 font-semibold"
                         onClick={() => setOutput((prev) => !prev)}

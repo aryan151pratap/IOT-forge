@@ -8,6 +8,7 @@ export const useAgent = () => {
     const [messages, setMessages] = useState([]);
     const [connectionStatus, setConnectionStatus] = useState("connecting"); // "connecting" | "connected" | "reconnecting" | "disconnected"
     const [models, setModels] = useState();
+    const [loading, setLoading] = useState(false);
 
     const isMountedRef = useRef(true);
     const manualDisconnectRef = useRef(false);
@@ -19,6 +20,9 @@ export const useAgent = () => {
 
         if (data.type === "model_list") {
             setModels(data);
+        }
+        if (data.type == "error" || data.streaming === false) {
+            setLoading(false);
         }
 
         setMessages((prev) => {
@@ -104,6 +108,8 @@ export const useAgent = () => {
     }, []);
 
     return {
+        loading,
+        setLoading,
         messages,
         setMessages,
         connected: connectionStatus === "connected",

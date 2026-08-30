@@ -4,7 +4,7 @@ import { me } from "../../services/authService";
 import { useNotify } from "../Device-IDE/notify";
 import { BsCopy } from "react-icons/bs";
 
-const ChatContainer = ({ messages, data }) => {
+const ChatContainer = ({ messages, data, loading }) => {
 	const chatRef = useRef(null);
 	useEffect(() => {
 		const container = chatRef.current;
@@ -38,6 +38,11 @@ const ChatContainer = ({ messages, data }) => {
 					))
 				)}
 			</div>
+			{loading &&
+			<div className="mt-10 relative w-5 h-5 rounded-full border border-orange-300/10">
+				<div className="absolute inset-0 rounded-full border-2 border-transparent border-t-orange-500 animate-spin" />
+			</div>
+			}
 			<div className="h-[40px]"></div>
 		</div>
 	);
@@ -56,7 +61,7 @@ const handleCopy = async (code, notify) => {
 
 const ChatType = ({ message, data }) => {
 	const isUser = message.role === "user";
-	console.log(message, data);
+	console.log(message);
 	const notify = useNotify();
 	return (
 		<div

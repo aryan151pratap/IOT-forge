@@ -38,7 +38,7 @@ const Dashboard = () => {
             </div>
 
             <div
-                className="group h-full w-2 p-0.5 flex justify-center cursor-col-resize border-l border-zinc-800 bg-[#0d0d0f]"
+                className="group h-full w-2 p-0.5 flex justify-center cursor-col-resize border-l border-zinc-900 bg-[#0d0d0f]"
                 onMouseDown={(e) =>
                     handleMouseDown(
                         e,

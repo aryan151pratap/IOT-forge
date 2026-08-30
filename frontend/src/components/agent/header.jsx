@@ -1,19 +1,32 @@
 import { useState } from "react";
 import {FiSend,FiPlus,FiPaperclip,FiTrash2,FiMoreHorizontal} from "react-icons/fi";
 import { FaCode } from "react-icons/fa";
-import { VscCode } from "react-icons/vsc";
+import { VscCode, VscLayoutPanelDock, VscLayoutSidebarRightDock } from "react-icons/vsc";
 
-const AgentHeader = ({ onClear, setCodePreview, showCodePreview, setShowCodePreview }) => {
+const AgentHeader = ({ onClear, codePreview, setCodePreview, showCodePreview, setShowCodePreview }) => {
 	return (
-		<header className="z-20 flex h-10 shrink-0 items-center justify-between overflow-auto dark-scrollbar">
+		<header className="z-20 flex h-10 shrink-0 items-center justify-between overflow-auto hide-scrollbar">
 			
 			<div className="flex items-center gap-1 px-2 ml-auto">
 				<button
-					className="p-2 hover:bg-zinc-800 rounded-md text-zinc-500 hover:text-zinc-200"
+					className={`${codePreview ? "bg-zinc-800/50" : ""} p-2 hover:bg-zinc-800 rounded-md text-zinc-500 hover:text-zinc-200`}
 					onClick={() => setCodePreview(e => !e)}
 				>
 					<VscCode className="font-thin"/>
 				</button>
+				{codePreview &&
+				<div>
+					<button className="text-zinc-500 p-2 bg-zinc-800/50 rounded-md hover:bg-zinc-800 hover:text-zinc-200"
+						onClick={() => setShowCodePreview(e => !e)}
+					>
+						{showCodePreview ?
+						<VscLayoutSidebarRightDock/>
+						:
+						<VscLayoutPanelDock/>
+						}
+					</button>
+				</div>
+				}
 				<button
 					className="rounded-md p-2 text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-200"
 					title="New Chat"

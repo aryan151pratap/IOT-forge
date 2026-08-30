@@ -26,12 +26,75 @@ class Manager:
 		path = response.get("path")
 		if operation == "list_folder":
 			folders = await self.read_folder(path)
-			print(folders)
 			response_data = self.res_back(type, request_id, request_type, folders, path, operation)
 			await client.send_json(response_data)
 
 		elif operation == "read_file":
 			await self.read_file(response, client)
+
+		elif operation == "write_file_start":
+			open(path + ".tmp", "w").close()
+			await client.send_json(self.res_back(type, request_id, request_type, "write_start ok", path, operation))
+
+		elif operation == "write_file":
+			data = response.get("data")
+			self.write_file(path, data)
+
+		elif operation == "write_file_end":
+			try:
+				os.remove(path)
+			except OSError:
+				pass
+			os.rename(path + ".tmp", path)
+			await client.send_json(self.res_back(type, request_id, request_type, path + " saved", path, operation))
+
+		elif operation == "create":
+			entry_type = response.get("entry_type")
+			created = self.create(path, entry_type)
+			if created:
+				message = f"{path} created"
+			else:
+				message = f"{path} already exists"
+			await client.send_json(self.res_back(type, request_id, request_type, message, path, operation))
+
+		elif operation == "delete":
+			entry_type = response.get("entry_type")
+			message = self.delete(path, entry_type)
+			await client.send_json(self.res_back(type, request_id, request_type, message, path, operation))
+			
+	def delete(self, path, entry_type):
+		try:
+			if entry_type == "file":
+				os.remove(path)
+			elif entry_type == "folder":
+				os.rmdir(path)
+			else:
+				return f"Unknown type: {entry_type}"
+			return f"{path} deleted"
+		except Exception as e:
+			return str(e)
+		
+	def exists(self, path):
+		try:
+			os.stat(path)
+			return True
+		except OSError:
+			return False
+
+	def create(self, path, entry_type):
+		if self.exists(path):
+			return False
+		if entry_type == "folder":
+			os.mkdir(path)
+		elif entry_type == "file":
+			open(path, "x").close()
+		else:
+			raise Exception(f"Unknown type: {entry_type}")
+		return True
+
+	def write_file(self, path, data):
+		with open(path + ".tmp", "a") as f:
+			f.write(data)
 
 	async def read_folder(self, path="/"):
 		entries = []
@@ -63,23 +126,9 @@ class Manager:
 						"operation": operation
 					})
 
-			await client.send_json({
-				"type": type,
-				"data": "",
-				"request_id": request_id,
-				"request_type": request_type,
-				"stream": False,
-				"path": path,
-				"operation": operation
-			})
+			res = self.res_back(type, request_id, request_type, "", path, operation, False)
+			await client.send_json(res)
 
 		except Exception as e:
-			await client.send_json({
-				"type": "error",
-				"request_id": request_id,
-				"request_type": request_type,
-				"data": str(e),
-				"path": path,
-				"stream": False,
-				"operation": operation
-			})
+			res = self.res_back("error", request_id, request_type, str(e), path, operation, False)
+			await client.send_json(res)

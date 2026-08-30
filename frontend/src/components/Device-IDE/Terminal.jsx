@@ -29,7 +29,7 @@ export default function TerminalFile({terminal, setTerminal, onClear, onClose, o
 			if (!input.trim()) 
 				return; 
 			const data = input;
-			onSend(data); 
+			onSend(data);
 			setHistory(prev => [...prev, input]);
 			setHistoryIndex(-1);
 			if(data == "clear") setTerminal([]);
@@ -65,7 +65,7 @@ export default function TerminalFile({terminal, setTerminal, onClear, onClose, o
 				</div>
 				<div className="flex flex-row overflow-auto dark-scrollbar">
 					{connection?.map((i, index) => (
-						<div className="flex flex-row text-xs text-white border-r border-zinc-800">
+						<div key={index} className="flex flex-row text-xs text-white border-r border-zinc-800">
 							{i?.device_id &&
 								<div className="uppercase p-1 bg-zinc-500/10 border-r border-zinc-800">
 									{i?.device_id}

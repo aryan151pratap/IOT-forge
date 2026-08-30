@@ -3,6 +3,7 @@ import uuid
 
 from fastapi import APIRouter, HTTPException
 from services.manager.device_manager import manager
+from services.device_sql_service import device_service
 
 router = APIRouter(tags=["IOT"])
 
@@ -10,6 +11,7 @@ router = APIRouter(tags=["IOT"])
 async def get_connection(device_id: str):
     device = manager.get_device(device_id)
     if not device:
+        device_service.update_status(device_id, "offline")
         return {"type": "error", "message": f"{device_id} offline"}
     print(device)
     websocket = device["websocket"]

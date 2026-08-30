@@ -11,7 +11,7 @@ import Landing from './components/landing/landing.jsx';
 import Agent from './components/agent/agent.jsx';
 import CarController from './pages/carController.jsx';
 import FailedRoute from './failedroute.jsx';
-import AuthPage from './pages/Login.jsx';
+import AuthPage from './pages/login.jsx';
 
 export default function App() {
   return (

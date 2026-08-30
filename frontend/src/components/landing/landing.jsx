@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import RetroDevice from "./Retrodevice ";
-import { DeviceGrid, CodePanel } from "./DeviceGrid";
+import RetroDevice from "./Retrodevice";
+import { DeviceGrid, CodePanel } from "./Devicegrid";
 
 const CITIES = [
   "KYOTO", "LAGOS", "OSLO", "AUSTIN", "PUNE", "SANTIAGO",

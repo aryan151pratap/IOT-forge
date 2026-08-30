@@ -14,10 +14,11 @@ const Agent = () => {
 	const [input, setInput] = useState("");	
 	const [codePreview, setCodePreview] = useState();
 	const [showCodePreview, setShowCodePreview] = useState(false);
-	const {messages, setMessages, connected, connectionStatus, models} = useAgent();
+	const {loading, setLoading, messages, setMessages, connected, connectionStatus, models} = useAgent();
 	const data = useAuth();
 	
 	const handleSend = (current_model) => {
+		setLoading(true);
 		const content = input.trim();
 		if (!content) return;
 		const userMessage = {
@@ -44,11 +45,12 @@ const Agent = () => {
 		<div className={`relative ${showCodePreview ? "flex-col" : "flex-row"} font-inter w-full flex h-full border-zinc-800 bg-[#0d0d0f] text-zinc-200 overflow-auto dark-scrollbar`}>
 			<AgentBackground />
 			<div className={`${codePreview ? "md:flex hidden" : "flex"} relative h-full w-full min-h-0 flex flex-col overflow-hidden`}>
-				<AgentHeader onClear={handleClear} setCodePreview={setCodePreview} showCodePreview={showCodePreview} setShowCodePreview={setShowCodePreview}/>
+				<AgentHeader onClear={handleClear} codePreview={codePreview} setCodePreview={setCodePreview} showCodePreview={showCodePreview} setShowCodePreview={setShowCodePreview}/>
 
 				<ChatContainer
 					messages={messages}
 					data={data}
+					loading={loading}
 				/>
 
 				<div className="shrink-0 ">

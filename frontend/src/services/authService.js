@@ -42,3 +42,11 @@ export const me = async () => {
 	}
 };
 
+export const get_user_details = async () => {
+	try {
+		const response = await API.get("/user_details");
+		return response.data;
+	} catch (error) {
+		throw error;
+	}
+};

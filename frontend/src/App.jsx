@@ -12,6 +12,7 @@ import Agent from './components/agent/agent.jsx';
 import CarController from './pages/carController.jsx';
 import FailedRoute from './failedroute.jsx';
 import AuthPage from './pages/login.jsx';
+import Profile from './components/profile/profile.jsx';
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
               <Route path="/commands" element={<MonitorDash/>} />
               <Route path="/agent" element={<Agent/>} />
               <Route path="/settings" element={<CarController/>}/>
+              <Route path="/profile" element={<Profile/>}></Route>
             </Route>
           </Route>
           <Route path="*" element={<FailedRoute />} />

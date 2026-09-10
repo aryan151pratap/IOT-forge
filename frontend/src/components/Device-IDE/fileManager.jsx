@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { FaTrash } from "react-icons/fa";
-import { FiChevronDown, FiChevronRight } from "react-icons/fi";
+import { FiChevronDown, FiChevronRight, FiTrash } from "react-icons/fi";
 import { VscFileCode, VscFolder, VscFolderOpened, VscJson, VscMarkdown, VscPython } from "react-icons/vsc";
 import { handleDeleteDevice } from "../../hooks/fileHandle";
 
@@ -147,7 +147,7 @@ export default function FileManager({
 					<div className="opacity-0 group-hover:opacity-90 p-1 hover:text-red-500/80 transition text-zinc-500/50 ml-auto"
 						onClick={() => handleDelete(node.path)}
 					>
-						<FaTrash/>
+						<FiTrash/>
 					</div>
 					}
 				</div>

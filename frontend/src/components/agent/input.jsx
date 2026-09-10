@@ -7,13 +7,14 @@ import { BsEmojiWink, BsWifi, BsWifi1, BsWifi2, BsWifiOff } from "react-icons/bs
 const WIFI_FRAMES = [<BsWifi1 />, <BsWifi2 />, <BsWifi />];
 const FRAME_INTERVAL_MS = 400;
 
-const AgentInput = ({ value, onChange, onSend, connected, models, connectionStatus}) => {
+const AgentInput = ({ value, onChange, onSend, connected, models, connectionStatus, device_connection, details }) => {
 	const [showModels, setShowModels] = useState(false);
 	const [current_model, setCurrent_model] = useState("");
+	const [showDetails, setShowDetails] = useState(false);
 	const textareaRef = useRef(null);
 
 	useEffect(() => {
-		setCurrent_model(models?.current_model);
+		setCurrent_model(models?.default);
 	}, [models])
 
 	const handleKeyDown = (event) => {
@@ -51,7 +52,7 @@ const AgentInput = ({ value, onChange, onSend, connected, models, connectionStat
 	}
 
 	return (
-		<div className="sticky bottom-3 w-full z-50 overlfow-auto flex flex-col items-center px-2">
+		<div className="sticky bottom-3 w-full z-50 flex flex-col items-center px-2 overflow-visible">
 			<div className="max-w-3xl w-full mx-auto">
 				<ConnectionStatusIcon connectionStatus={connectionStatus}/>
 			</div>
@@ -71,24 +72,45 @@ const AgentInput = ({ value, onChange, onSend, connected, models, connectionStat
 					>
 						<FiPaperclip size={17} />
 					</button>
-					<div className="flex flex-wrap gap-1 items-end px-4 overflow-auto hide-scrollbar mr-2">
-						<div className={`flex flex-row gap-1 justify-center capitalize text-[10px] px-2 p-1 ${connected ? "text-green-400 bg-green-500/20" : "text-red-500 bg-red-400/10"}`}>
+					
+					<div className="flex flex-wrap gap-1 items-center px-4 overflow-auto hide-scrollbar mr-2">
+						<div className={`flex flex-row gap-1 justify-center capitalize text-[10px] px-2 p-1 rounded ${connected ? "text-green-400 bg-green-500/20" : "text-red-500 bg-red-400/10"}`}>
 						    <span>
 								{connected ?
-								<BsWifi className="h-3 w-3"/>
+								<BsWifi className="h-4 w-4"/>
 								:
 								<BsWifiOff className="h-4 w-4"/>
 							    }
 							</span>
-							{connected ? "connected" : "disconnected"}
+							{!connected && "disconnected"}
 						</div>
-						{/* <ModelSelector
+						{/* <div className="ml-2 text-xs text-zinc-500">
+							{device_connection ? `Connected to: ${device_connection}` : "No device connected"}
+							</div> */}
+						<ModelSelector
 							showModels={showModels}
 							setShowModels={setShowModels}
 							current_model={current_model}
 							models={models}
 							handleSelectModel={handleSelectModel}
-						/> */}
+							details={details}
+						/>
+						<div className="text-xs flex flex-wrap gap-1">
+							<span className={`${showDetails ? "bg-purple-500/15" : "bg-zinc-500/20"} capitalize px-2 p-1 hover:text-white hover:bg-purple-500/20 cursor-pointer rounded`}
+								onClick={() => setShowDetails(e => !e)}
+							>
+								{details?.type}
+							</span>
+							<div className={`${showDetails ? "flex" : "hidden"}`}>
+								<div className="flex flex-wrap gap-1">
+									{/* <span className="bg-zinc-500/20 px-2 p-1 rounded">{details?.model}</span> */}
+									<span className={`${details?.current_device ? "bg-green-500/10" : "bg-red-500/10"} py-1 rounded overflow-hidden`}>
+										<span className="px-2 bg-zinc-300/5 p-1 text-zinc-300/80 capitalize">device</span>
+										<span className={`${details?.current_device ? "text-green-300" : "text-red-300"} px-2`}>{details?.current_device ? "connected" : "disconnect"}</span>
+									</span>
+								</div>
+							</div>
+						</div>
 					</div>
 					<button
 						onClick={handleSendClick}
@@ -98,6 +120,7 @@ const AgentInput = ({ value, onChange, onSend, connected, models, connectionStat
 					>
 						<VscArrowUp size={16} />
 					</button>
+					
 				</div>
 				
 			</div>
@@ -135,31 +158,42 @@ function ConnectionStatusIcon({ connectionStatus }) {
 }
 
 
-
-const ModelSelector = ({ showModels, setShowModels, current_model, models, handleSelectModel }) => {
+const ModelSelector = ({ showModels, setShowModels, current_model, models, handleSelectModel, details }) => {
 	return(
-		<div className="">
+		<div className="shrink-0">
+			<div className={`absolute bottom-10 z-50 border border-zinc-800 w-fit min-w-48 flex text-sm bg-zinc-900 mb-2 rounded overflow-hidden ${!showModels ? "hidden" : "flex flex-col"}`}>				
+				<div className="sticky top-0 bg-black/50 rounded-t px-2 p-1 capitalize text-zinc-300/80 border-b border-zinc-800/40">
+					<div className="flex flex-col text-xs">
+						<span>ai models</span>
+						<span className="lowercase text-purple-300/60">{current_model}</span>
+					</div>
+				</div>
+				<div className="max-h-[150px] p-2 bg-black flex flex-col overflow-auto hide-scrollbar">
+					<div className="h-full overflow-auto hide-scrollbar flex flex-col gap-0.5">
+						{models?.models?.map((i, index) => (
+							<div key={index} className="shrink-0 cursor-pointer text-xs"
+								onClick={() => handleSelectModel(i)}
+							>
+								<div className={`${current_model == i ? "text-zinc-100 bg-purple-400/10 border border-purple-500/20" : "hover:text-zinc-100 hover:bg-zinc-500/20 border border-white/0 hover:border-zinc-500/10"} p-1 group flex flex-row items-center gap-2 text-zinc-400 rounded line-clamp-1 capitalize transition`}>
+									<span className="px-2 p-0.5 bg-purple-500/15 group-hover:bg-purple-500/10 rounded flex transition font-mon0">
+										{index+1}
+									</span>
+									<span className="shrink-0 w-full mr-2">
+										{i}
+									</span>
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+			</div>
 			<button
-							className="max-w-fit min-w-10 bg-zinc-500/10 flex text-xs rounded overflow-hidden"
-							onClick={() => setShowModels(e => !e)}
-						>
-							<span className="capitalize bg-zinc-300/5 px-2 p-1 text-zinc-300/80">model</span>
-							<span className="p-1 px-2 line-clamp-1 ">{current_model?.includes("/") ? current_model.split("/")[1] : current_model}</span>
-						</button>
-						<div className={`max-h-50 border border-zinc-800 w-fit flex text-sm absolute bg-zinc-900 mb-10 mr-2 rounded ${!showModels ? "hidden" : "flex flex-col"}`}>
-							<div className="sticky top-0 bg-black/50 rounded-t px-2 p-1 capitalize text-zinc-300/80">
-								ai models
-							</div>
-							<div className="p-1 flex flex-col overflow-auto scrollbar-thin">
-								{models?.model.map((i, index) => (
-									<div key={index} className="shrink-0 cursor-pointer"
-										onClick={() => handleSelectModel(i)}
-									>
-										<p className="shrink-0 w-full hover:bg-orange-500/10 p-0.5 text-zinc-300/90 hover:text-orange-200 px-2 rounded line-clamp-1 capitalize">{i?.includes("/") ? i.split("/")[1] : i}</p>
-									</div>
-								))}
-							</div>
-						</div>
+				className="border border-white/0 focus:border-purple-500/50 hover:border-purple-500/10 focus:bg-purple-500/10 hover:bg-purple-500/10 max-w-fit min-w-10 bg-zinc-500/10 flex text-xs rounded overflow-hidden"
+				onClick={() => setShowModels(e => !e)}
+			>
+				<span className="capitalize bg-zinc-300/5 px-2 p-1 text-zinc-300/80">{details?.provider}</span>
+				<span className="p-1 px-2 line-clamp-1 ">{current_model?.includes("/") ? current_model.split("/")[1] : current_model}</span>
+			</button>
 		</div>
 	)
 }

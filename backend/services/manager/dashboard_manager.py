@@ -79,7 +79,6 @@ class DashboardManager:
         if not future.done():
             future.set_result(data)
 
-        # Send response only to the frontend
         try:
             await websocket.send_json({**data, "request_type": request_type})
         except Exception:

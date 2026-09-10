@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { connectAgent, disconnectAgent } from "../services/deviceService";
+import { useNotify } from "../components/Device-IDE/notify";
+import { agent_model_list } from "./agentHandle";
 
 const BASE_RETRY_MS = 1000;
 const MAX_RETRY_MS = 15000;
@@ -8,39 +10,117 @@ export const useAgent = () => {
     const [messages, setMessages] = useState([]);
     const [connectionStatus, setConnectionStatus] = useState("connecting"); // "connecting" | "connected" | "reconnecting" | "disconnected"
     const [models, setModels] = useState();
-    const [loading, setLoading] = useState(false);
-
+    const [details, setDetails] = useState(null);
     const isMountedRef = useRef(true);
     const manualDisconnectRef = useRef(false);
     const reconnectAttemptsRef = useRef(0);
     const reconnectTimerRef = useRef(null);
 
+    const get_model_list = async function(){
+        try{
+            const llm_list = await agent_model_list();
+            setModels(llm_list);
+        } catch (err) {
+            console.log(err);
+        }
+    }
+    
+    useEffect(() => {
+        get_model_list();
+    }, [])
+
+    const thinkingEnd = function(){
+        try{
+            setMessages((prev) => {
+                let last = prev[prev.length - 1];
+                if (last?.type === "thinking") {
+                    return [...prev.slice(0, -1), { ...last, streaming: false }];
+                } else {
+                    const last = prev[prev.length - 2];
+                    if(last?.type === "thinking") {
+                        return [...prev.slice(0, -2), { ...last, streaming: false }, prev[prev.length - 1]];
+                    }
+                }
+                return prev;
+            });
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
     const handleAgentMessage = useCallback((data) => {
         console.log("Agent response:", data);
-
+        const type = data.type;
+        if(type === "model_changed"){
+            setDetails((e) => ({...e, provider: data.provider, model: data.model}));
+            return;
+        }
+        if(data.type === "details"){
+            setDetails(data);
+            return;
+        }
         if (data.type === "model_list") {
             setModels(data);
+            return;
         }
-        if (data.type == "error" || data.streaming === false) {
-            setLoading(false);
+        if (data.type == "error") {
+            console.log("agent error", data);
+            setMessages((prev) => [...prev, {id: Date.now(), role: "assistant", type: "error", content: data?.content, streaming: false, retry_time: data?.retry_after}]);
+            thinkingEnd();
+            return;
+        }
+
+        if (data.type === "thinking_start") {
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: Date.now(),
+                    role: "assistant",
+                    type: "thinking",
+                    content: "",
+                    streaming: true,
+                },
+            ]);
+            return;
+        }
+        if (data.type === "thinking_end") {
+            thinkingEnd();
+            return;
+        }
+
+        if (data.type === "tool_start" || data.type === "tool_end") {
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: Date.now(),
+                    role: "assistant",
+                    type: data.type,
+                    tool: data.tool,
+                    content: data.content,
+                    streaming: false,
+                },
+            ]);
+            return;
         }
 
         setMessages((prev) => {
             const last = prev[prev.length - 1];
-            if (last?.role === "assistant" && last.streaming) {
+            const canAppend =
+                last?.role === "assistant" && last.streaming && last.type === "chunk";
+
+            if (canAppend) {
                 return [
                     ...prev.slice(0, -1),
-                    {
-                        ...last,
-                        content: last.content + (data?.content || ""),
-                    },
+                    { ...last, content: last.content + (data?.content || "") },
                 ];
             }
+
             return [
                 ...prev,
                 {
                     id: Date.now(),
                     role: "assistant",
+                    type: data.type,
                     content: data?.content || "",
                     streaming: true,
                 },
@@ -108,12 +188,11 @@ export const useAgent = () => {
     }, []);
 
     return {
-        loading,
-        setLoading,
         messages,
         setMessages,
         connected: connectionStatus === "connected",
         connectionStatus,
         models,
+        details,
     };
 };

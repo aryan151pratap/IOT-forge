@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect, use } from "react";
 import {
   FiCopy,
   FiCheck,
@@ -7,13 +7,14 @@ import {
   FiCode,
   FiZap,
 } from "react-icons/fi";
-import EditorFile from "../Device-IDE/EditorFile";
+import { VscRunAbove, VscRunCompact } from "react-icons/vsc";
+import EditorFile from "../../Device-IDE/EditorFile";
 import { BsCopy } from "react-icons/bs";
-import { useNotify } from "../Device-IDE/notify";
+import { useNotify } from "../../Device-IDE/notify";
+import { useAgentContext } from "../agentContext";
+import { FaCode } from "react-icons/fa";
+import HtmlPreview from "../htmlpreview";
 
-/* ============================================================================
- * BLOCK SPLITTING — separates fenced code from prose
- * ==========================================================================*/
 
 function splitIntoBlocks(raw) {
   const blocks = [];
@@ -165,25 +166,22 @@ function renderInline(text) {
 		}
 		if (part.startsWith("`") && part.endsWith("`")) {
 			return (
-				<code key={idx} className="rounded bg-zinc-800 px-1.5 py-0.5 font-mono text-[0.85em] text-orange-300">
-			{part.slice(1, -1)}
-			</code>
-		);
+				<code key={idx} className="rounded bg-zinc-800 px-1.5 py-0.5 font-mono text-[0.85em] text-purple-300">
+        {part.slice(1, -1)}
+        </code>
+      );
 		}
 		if (part === "---") return
 		return <React.Fragment key={idx}>{part}</React.Fragment>;
 	});
 }
 
-/* ============================================================================
- * PER-TYPE RENDER FUNCTIONS
- * ==========================================================================*/
 
 function Heading({ level, text }) {
   const Tag = `h${Math.min(level + 2, 6)}`;
   const size = Tag === "h3" ? "text-md" : "text-sm";
   return (
-    <Tag className={`mt-5 mb-2 bg-orange-400/15 px-2 p-1 border-l-2 cursor-pointer border-orange-500 w-fit text-orange-200 ${size}`}>
+    <Tag className={`mt-5 mb-2 cursor-pointer w-fit text-purple-300 ${size}`}>
       {renderInline(text)}
     </Tag>
   );
@@ -196,7 +194,7 @@ function Paragraph({ text }) {
 function ListBlock({ ordered, items }) {
   const Tag = ordered ? "ol" : "ul";
   return (
-    <Tag className={`my-1.5 space-y-1 pl-5 text-[15px] text-zinc-200 ${ordered ? "list-decimal" : "list-disc"}`}>
+    <Tag className={`my-1.5 pl-5 text-[14px] text-zinc-200 ${ordered ? "list-decimal" : "list-disc"}`}>
       {items.map((item) => (
         <li key={item.key} className="marker:text-zinc-500">
           {renderInline(item.text)}
@@ -261,7 +259,7 @@ function TextWithCursor({ text, showCursor }) {
   return (
     <div>
       <TextBlock text={text} />
-      {showCursor && (
+      {!showCursor && (
         <span className="ml-0.5 inline-block h-4 w-[2px] translate-y-0.5 animate-pulse bg-orange-500 align-middle" />
       )}
     </div>
@@ -293,10 +291,20 @@ const EDITOR_MIN_HEIGHT = 160;
 const EDITOR_MAX_HEIGHT = 480;
 
 function CodeBlock({ language, value, closed, isStreaming, blockId }) {
+  const {setCodePreview, setShowCodePreview, codePreview, showCodePreview} = useAgentContext();
   const [collapsed, setCollapsed] = useState(false);
   const [copied, setCopied] = useState(false);
   const [code, setCode] = useState(value);
+  const [preview, setPreview] = useState(false);
+  const openCode = () => {
+      setCodePreview({ id: fileName, language, content: code});
+      setShowCodePreview(true);
+  };
 
+  const openPreview = () => {
+    if(!preview) setCodePreview({ id: fileName, language, content: code});
+    setPreview(e => !e);
+  }
   useEffect(() => {
     setCode(value);
   }, [value]);
@@ -329,7 +337,7 @@ function CodeBlock({ language, value, closed, isStreaming, blockId }) {
 
   return (
     <div className="my-2 shadow-lg shadow-black overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950">
-      <div className="flex flex-row items-center gap-2 border-b border-zinc-800 bg-zinc-900/80 px-2.5 py-1.5">
+      <div className="flex flex-row items-center gap-2 border-zinc-800 bg-zinc-900/80 px-2.5 py-1.5">
         <button
           type="button"
           onClick={() => setCollapsed((c) => !c)}
@@ -343,7 +351,19 @@ function CodeBlock({ language, value, closed, isStreaming, blockId }) {
         <span className="font-plex font-mono text-xs text-zinc-300">{fileName}</span>
         <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-zinc-500">{language}</span>
 
-        <div className="ml-auto flex shrink-0 items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center rounded bg-zinc-800/20 text-xs text-zinc-400">
+          <button onClick={() => openPreview()} className={`p-1 px-2 ${preview ? "bg-zinc-800" : ""} hover:bg-zinc-800 rounded`}>
+            <VscRunCompact className="w-4 h-4"/>
+          </button>
+        </div>
+
+        <div className="flex shrink-0 items-center rounded bg-zinc-800/20 text-xs text-zinc-400">
+          <button onClick={() => openCode()} className={`p-1 px-2 ${showCodePreview ? "bg-zinc-800" : ""} hover:bg-zinc-800 rounded`}>
+            <VscRunAbove className="w-4 h-4"/>
+          </button>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
           {!closed && isStreaming && (
             <span className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-wide text-orange-400">
               <FiZap size={11} />
@@ -363,31 +383,22 @@ function CodeBlock({ language, value, closed, isStreaming, blockId }) {
 
       {!collapsed && (
         <div style={{ height: `${editorHeight}px` }}>
+          {!preview ?
           <EditorFile
             file={{ id: fileId, name: fileName, language, content: code}}
             onChange={handleChange}
-			fontsize={14}
-			lineHeight={20}
+            fontsize={14}
+            lineHeight={20}
           />
+          :
+          <HtmlPreview setCodePreview={setPreview} code={codePreview}/>
+          }
         </div>
       )}
     </div>
   );
 }
 
-function TypingIndicator() {
-  return (
-    <div className="flex items-center gap-1 py-1">
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-zinc-500 [animation-delay:-0.3s]" />
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-zinc-500 [animation-delay:-0.15s]" />
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-zinc-500" />
-    </div>
-  );
-}
-
-/* ============================================================================
- * MESSAGE + THREAD
- * ==========================================================================*/
 
 export function ChatMessage({
   id,
@@ -417,7 +428,6 @@ export function ChatMessage({
         </div>
 
         <div className={isAgent ? "w-full" : "max-w-[480px] rounded-xl bg-orange-500/10 px-3.5 py-2.5"}>
-          {blocks.length === 0 && isStreaming && <TypingIndicator />}
           {blocks.map((block, i) =>
             block.type === "code" ? (
               <CodeBlock

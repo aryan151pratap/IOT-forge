@@ -2,10 +2,13 @@ import { useState } from "react";
 import {FiSend,FiPlus,FiPaperclip,FiTrash2,FiMoreHorizontal} from "react-icons/fi";
 import { FaCode } from "react-icons/fa";
 import { VscCode, VscLayoutPanelDock, VscLayoutSidebarRightDock } from "react-icons/vsc";
+import ConnectDevice from "./connectDevice";
 
-const AgentHeader = ({ onClear, codePreview, setCodePreview, showCodePreview, setShowCodePreview }) => {
+const AgentHeader = ({ onClear, codePreview, setCodePreview, showCodePreview, setShowCodePreview, details, device_connection }) => {
+	const [connectDevices, setConnectDevices] = useState(false);
+
 	return (
-		<header className="z-20 flex h-10 shrink-0 items-center justify-between overflow-auto hide-scrollbar">
+		<header className="shadow-xl bg-black shadow-black relative flex h-10 shrink-0 items-center justify-between overflow-auto hide-scrollbar">
 			
 			<div className="flex items-center gap-1 px-2 ml-auto">
 				<button
@@ -30,9 +33,13 @@ const AgentHeader = ({ onClear, codePreview, setCodePreview, showCodePreview, se
 				<button
 					className="rounded-md p-2 text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-200"
 					title="New Chat"
+					onClick={() => setConnectDevices(e => !e)}
 				>
 					<FiPlus size={16} />
 				</button>
+				{connectDevices &&
+					<ConnectDevice details={details}/>
+				}
 
 				<button
 					onClick={onClear}

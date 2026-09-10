@@ -1,10 +1,19 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChatMessage } from "./chatStyle";
-import { me } from "../../services/authService";
-import { useNotify } from "../Device-IDE/notify";
 import { BsCopy } from "react-icons/bs";
+import MessageUI from "./messageUI";
+import { useNotify } from "../../Device-IDE/notify";
 
-const ChatContainer = ({ messages, data, loading }) => {
+const handleCopy = async (code, notify) => {
+	try {
+		await navigator.clipboard.writeText(code);
+		notify({type: "status", message: "Link copied!"});
+	} catch (err) {
+		notify({type: "error", message: err.message});
+	}
+};
+
+const ChatContainer = ({ messages, data }) => {
 	const chatRef = useRef(null);
 	useEffect(() => {
 		const container = chatRef.current;
@@ -15,8 +24,9 @@ const ChatContainer = ({ messages, data, loading }) => {
 	}, [messages]);
 	
 	return (
+		//ref={chatRef}
 		<div ref={chatRef} className="h-fit min-h-0 w-full min-w-0 flex-1 overflow-auto hide-scrollbar px-4 py-5">
-			<div className="max-w-3xl mx-auto flex flex-col gap-5 overflow-auto dark-scrollbar">
+			<div className="max-w-3xl mx-auto flex flex-col overflow-auto dark-scrollbar">
 				{messages.length === 0 ? (
 					<div className="flex flex-1 items-center justify-center py-20 text-center">
 						<div>
@@ -38,11 +48,6 @@ const ChatContainer = ({ messages, data, loading }) => {
 					))
 				)}
 			</div>
-			{loading &&
-			<div className="mt-10 relative w-5 h-5 rounded-full border border-orange-300/10">
-				<div className="absolute inset-0 rounded-full border-2 border-transparent border-t-orange-500 animate-spin" />
-			</div>
-			}
 			<div className="h-[40px]"></div>
 		</div>
 	);
@@ -50,18 +55,8 @@ const ChatContainer = ({ messages, data, loading }) => {
 
 export default ChatContainer;
 
-const handleCopy = async (code, notify) => {
-	try {
-		await navigator.clipboard.writeText(code);
-		notify({type: "status", message: "Link copied!"});
-	} catch (err) {
-		notify({type: "error", message: err.message});
-	}
-};
-
 const ChatType = ({ message, data }) => {
 	const isUser = message.role === "user";
-	console.log(message);
 	const notify = useNotify();
 	return (
 		<div
@@ -69,29 +64,29 @@ const ChatType = ({ message, data }) => {
 				isUser ? "justify-end" : "justify-start"
 			}`}
 		>
-			<div className={`${isUser ? "max-w-[400px]" : "w-full"} flex flex-col gap-1.5`}>
+			<div className={`${isUser ? "max-w-[400px]" : "w-full"} flex flex-col`}>
 				{isUser ?
-					<div className="ml-auto text-xs text-zinc-200/80 capitalize mt-2">
+					<div className="ml-auto text-xs text-zinc-200/80 capitalize mt-10 mb-1">
 						<span className="p-1 px-2 rounded-md bg-blue-500/10">{data?.user?.email.split("@")[0]}</span>
 					</div>
 					:
 					<div></div>
 			    }
 				<pre
-					className={`font-inter rounded-xl py-2.5 break-words text-wrap overflow-auto dark-scrollbar ${
+					className={`font-inter break-words text-wrap overflow-auto dark-scrollbar ${
 						isUser
-							? "px-4 max-h-[450px] bg-orange-400/10 text-orange-100/80 text-sm"
-							: "text-zinc-300 text-[15px] break-words text-wrap "
+							? "px-4 py-2.5 max-h-[450px] bg-purple-400/10 text-orange-100/80 text-sm rounded-xl"
+							: "text-zinc-300 text-[15px] break-words text-wrap"
 					}`}
 			    >
 					{!isUser ?
-						<MessageUI content={message?.content} isStreaming={message?.streaming} role={message?.role}/>
+						<MessageUI message={message}/>
 						:
 						message.content
 					}
 			    </pre>
 				<div className="flex flex-row">
-					<span className={`${isUser ? "ml-auto" : "hidden"} text-zinc-400 hover:text-zinc-300 cursor-pointer`}
+					<span className={`${isUser ? "ml-auto mt-1 mb-10" : "hidden"} text-zinc-400 hover:text-zinc-300 cursor-pointer`}
 						onClick={() => handleCopy(message?.content ,notify)} 
 					>
 						<BsCopy/>
@@ -99,15 +94,6 @@ const ChatType = ({ message, data }) => {
 					<span className="text-xs px-2 font-inter first-letter:capitalize text-zinc-400">{message?.time}</span>
 				</div>
 			</div>
-		</div>
-	);
-};
-
-const MessageUI = function({ content, isStreaming, role }) {
-	return (
-		<div className="w-full font-inter">
-			<ChatMessage content={content} isStreaming={isStreaming} role={role} />
-			{/* {content} */}
 		</div>
 	);
 };

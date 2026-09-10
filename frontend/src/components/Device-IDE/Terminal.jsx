@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { FiTerminal, FiTrash2, FiX } from "react-icons/fi";
 import { getPreviousHistory, getNextHistory } from "../../services/history.js"; 
+import { FaTimes } from "react-icons/fa";
 
 export default function TerminalFile({terminal, setTerminal, onClear, onClose, onSend, iotConn, backend, openTerminal}) {
 	const [input, setInput] = useState(""); 
@@ -55,7 +56,7 @@ export default function TerminalFile({terminal, setTerminal, onClear, onClose, o
     };
 
 	return (
-		<section onClick={handleParentClick} className="font-mono h-full flex flex-1 flex-col border-zinc-800 bg-[#09090b] oveflow-auto">
+		<section onClick={handleParentClick} className="relative group font-mono h-full flex flex-1 flex-col border-zinc-800 bg-[#09090b] oveflow-auto">
 			<div className="flex shrink-0 items-center border-zinc-800 bg-[#111113] overflow-auto hide-scrollbar">
 				<div className="flex items-center gap-5 h-full  px-2 border-r border-zinc-800">
 					<div className="flex items-center gap-2 text-xs text-white">
@@ -126,7 +127,13 @@ export default function TerminalFile({terminal, setTerminal, onClear, onClose, o
 						spellCheck={false} 
 					/> 
 				</div>
-				
+				<div className="group-hover:flex hidden absolute bottom-2 right-2 transition duration-300">
+					<button className="flex flex-row items-center gap-1 bg-zinc-800/50 text-zinc-500 hover:bg-purple-600 hover:text-white px-2 p-1 font-inter"
+						onClick={onClear}
+					>
+						clear
+					</button>
+				</div>
 			</div>
 		</section>
 	);

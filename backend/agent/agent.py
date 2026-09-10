@@ -1,17 +1,26 @@
 import os
+from agent.agentResponse import handle_chat_model_stream, handle_other_event, handle_tool_end, handle_tool_start, handle_error
 from dotenv import load_dotenv
 from fastapi import WebSocket
 from langchain.agents import create_agent
+from langgraph.checkpoint.memory import InMemorySaver
 
 from .providers.groq_provider import GroqProvider
 from .providers.gemini_provider import GeminiProvider
-
+from .systemPrompt import system_prompt
+from .providers.models import get_model_config
 load_dotenv()
 
+EVENT_HANDLERS = {
+    "on_chat_model_stream": handle_chat_model_stream,
+    "on_tool_start": handle_tool_start,
+    "on_tool_end": handle_tool_end,
+}
 
 class Agent:
 
-    def __init__(self):
+    def __init__(self, user_id: int):
+        self.user_id = user_id
         self.providers = {
             "groq": GroqProvider(),
             "gemini": GeminiProvider()
@@ -19,10 +28,12 @@ class Agent:
 
         self.provider = os.getenv("PROVIDER", "gemini")
         self.model = os.getenv("GEMINI_MODEL")
-
+        self.checkpointer = InMemorySaver()
+        self.device_id = None
         self.agent = None
         self.tools = []
         self.initialized = False
+        self.system_prompt = system_prompt
 
     def set_provider(self, provider):
         if provider not in self.providers:
@@ -36,9 +47,16 @@ class Agent:
         self.create_agent()
 
     def set_tools(self, tools):
-        self.tools = tools
+        self.tools.extend(tools)
         self.create_agent()
 
+    def reset_tools(self, tools):
+        self.tools = tools
+        self.create_agent()
+        
+    def get_device(self):
+        return self.device_id
+    
     def create_agent(self):
         """
         Create/recreate LangChain agent whenever
@@ -49,9 +67,15 @@ class Agent:
         llm = self.providers[self.provider].get_llm(self.model)
         self.agent = create_agent(
             model=llm,
-            tools=self.tools
+            tools=self.tools,
+            system_prompt=self.system_prompt,
+            checkpointer=self.checkpointer
         )
+        self.initialized = True
 
+    def _config(self):
+        return {"configurable": {"thread_id": str(self.user_id)}}
+    
     async def stream(self, message, websocket: WebSocket):
         if self.agent is None:
             await websocket.send_json({
@@ -59,9 +83,7 @@ class Agent:
                 "content": "Agent is not initialized"
             })
             return
-
         try:
-
             async for event in self.agent.astream_events(
                 {
                     "messages": [
@@ -71,36 +93,11 @@ class Agent:
                         }
                     ]
                 },
+                config=self._config(),
                 version="v2"
             ):
-                event_type = event["event"]
-                if event["event"] == "on_chat_model_stream":
-                    content = event["data"]["chunk"].content
-
-                    if isinstance(content, list):
-                        for item in content:
-                            if item.get("type") == "text":
-                                text = item.get("text")
-
-                                if text:
-                                    await websocket.send_json({
-                                        "type": "chunk",
-                                        "content": text
-                                    })
-
-                elif event_type == "on_tool_start":
-                    await websocket.send_json({
-                        "type": "tool_start",
-                        "tool": event.get("name"),
-                        "input": event["data"].get("input")
-                    })
-
-                elif event_type == "on_tool_end":
-                    await websocket.send_json({
-                        "type": "tool_end",
-                        "tool": event.get("name"),
-                        "output": event["data"].get("output")
-                    })
+                handler = EVENT_HANDLERS.get(event["event"], handle_other_event)
+                await handler(event, websocket)
 
             await websocket.send_json({
                 "type": "done",
@@ -108,17 +105,16 @@ class Agent:
             })
 
         except Exception as e:
-
-            await websocket.send_json({
-                "type": "error",
-                "content": str(e)
-            })
+            await handle_error(e, websocket)
 
     async def response(self, data, websocket: WebSocket):
         data_type = data.get("type")
         if data_type == "change_model":
-            self.set_provider(data["provider"])
-            self.set_model(data["model"])
+            model = data.get("model")
+            llm = get_model_config(model)
+            if llm:
+                self.set_provider(llm.get("provider"))
+                self.set_model(llm.get("model_name"))
 
             await websocket.send_json({
                 "type": "model_changed",

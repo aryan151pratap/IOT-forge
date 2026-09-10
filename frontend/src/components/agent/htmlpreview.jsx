@@ -4,15 +4,22 @@ import { useNavigate } from "react-router-dom";
 import { VscCheckAll, VscCode } from "react-icons/vsc";
 import { FiMaximize2, FiMinimize2 } from "react-icons/fi";
 
-export default function HtmlPreview({setCodePreview}) {
+export default function HtmlPreview({setCodePreview, code=null}) {
     const [output, setOutput] = useState(false);
     const [expand, setExpand] = useState(false);
-    
+
 	const [html, setHtml] = useState({
         id: "index.html",
         language: "html",
         content: ""
     });
+
+    useEffect(() => {
+        setOutput(false);
+        setExpand(false);
+        if(!code) return;
+        setHtml(code);
+    }, [code]);
 
 	const navigate = useNavigate();
     useEffect(() => {

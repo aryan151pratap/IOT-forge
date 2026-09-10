@@ -3,6 +3,8 @@ from pydantic import BaseModel, EmailStr
 
 from services.auth_service import login_user, signup_user, verify_access_token
 from services.user_register import user_register
+from services.auth_service import get_current_user
+from services.user_register import user_register
 
 router = APIRouter(tags=["Auth"])
 
@@ -102,9 +104,31 @@ async def meToken(request: Request):
 		"email": email
 	}
 
+@router.get("/user_details")
+async def get_user_details(request: Request):
+	token = get_current_user(request)
+	user_id = token.get('user_id')
+	if not user_id:
+		return {
+			"type": "error",
+			"message": f"user_id not found"
+		}
+
+	user = user_register.get_user_by_id(user_id)
+	if not user:
+		return {
+			"type": "error",
+			"message": f"user_id not found"
+		}
+	
+	return {
+		"user": user,
+		"status": True
+	}
+
 @router.post("/logout")
 async def logout(response: Response):
-
+	
 	response.delete_cookie(
 		key="access_token"
 	)

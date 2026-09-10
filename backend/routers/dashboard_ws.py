@@ -56,13 +56,14 @@ async def handle_filesystem(data, dashboard_ws):
             "data": f"Unknown filesystem operation: {operation}"
         })
         return
-    
+
     request_id = str(uuid.uuid4())
-    dashboard_manager.create_pending_request(
-        request_id,
-        "ws",
-        dashboard_ws
-    )
+    if operation not in ["write_file"]:
+        dashboard_manager.create_pending_request(
+            request_id,
+            "ws",
+            dashboard_ws
+        )
     try:
         send_data = {
             **data,

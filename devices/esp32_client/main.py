@@ -18,10 +18,25 @@ DEVICE_ID = get_device_id()
 async def receive_loop(client, terminal):
     while True:
         response = await client.receive()
+        if response is None:
+            continue
         try:
             response = json.loads(response)
         except Exception as e:
+            error_message = {
+                "type": "runner",
+                "message": str(e),
+                "response_type": str(type(response)),
+                "response": str(response),
+            }
+
             print("Invalid JSON:", e)
+
+            try:
+                await client.send_json(error_message)
+            except Exception as send_error:
+                print("Failed to send error:", send_error)
+
             continue
         message_type = response.get("type")
         if message_type == "runner":

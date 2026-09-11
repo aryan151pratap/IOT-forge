@@ -2,20 +2,29 @@ import { useEffect, useRef, useState } from "react";
 import { FiTerminal, FiTrash2, FiX } from "react-icons/fi";
 import { getPreviousHistory, getNextHistory } from "../../services/history.js"; 
 import { FaTimes } from "react-icons/fa";
+import { FileOutput } from "lucide-react";
 
-export default function TerminalFile({terminal, setTerminal, onClear, onClose, onSend, iotConn, backend, openTerminal}) {
+export default function TerminalFile({terminal, setTerminal, onClear, onClose, onSend, iotConn, backend, output}) {
 	const [input, setInput] = useState(""); 
 	const inputRef = useRef(null); 
-	const terminalRef = useRef(null); 
+	const {ref: terminalRef, handleScroll} = useAutoScroll(terminal);
 	const [history, setHistory] = useState([]);
 	const [historyIndex, setHistoryIndex] = useState(-1);
 	const [connection, setConnection] = useState();
-
-	useEffect(() => { 
-		if (terminalRef.current) { 
-			terminalRef.current.scrollTop = terminalRef.current.scrollHeight; 
-		} 
-	}, [terminal]); 
+	const [option, setOption] = useState("terminal");
+	
+	const options = [
+		{
+			id: "terminal",
+			label: "TERMINAL",
+			icon: <FiTerminal size={14} />,
+		},
+		{
+			id: "output",
+			label: "OUTPUT",
+			icon: <FileOutput size={14} />,
+		},
+	];
 
 	useEffect(() => {
 		setConnection([iotConn, {device_id: "server", status: backend}]);
@@ -58,12 +67,27 @@ export default function TerminalFile({terminal, setTerminal, onClear, onClose, o
 	return (
 		<section onClick={handleParentClick} className="relative group font-mono h-full flex flex-1 flex-col border-zinc-800 bg-[#09090b] oveflow-auto">
 			<div className="flex shrink-0 items-center bg-[#111113] overflow-auto hide-scrollbar">
-				<div className="flex items-center gap-5 h-full  px-2 border-r border-zinc-800">
-					<div className="flex items-center gap-2 text-xs text-white">
-						<FiTerminal size={14} />
-						TERMINAL
+				{options.map((item) => (
+					<div
+						key={item.id}
+						onClick={() => setOption(item.id)}
+						className={`
+							flex items-center gap-5 h-full px-2
+							border-r border-zinc-800 cursor-pointer
+							${option === item.id ? "bg-zinc-900" : ""}
+						`}
+					>
+						<div
+							className={`
+								flex items-center gap-2 text-xs
+								${option === item.id ? "text-white" : "text-zinc-500"}
+							`}
+						>
+							{item.icon}
+							{item.label}
+						</div>
 					</div>
-				</div>
+				))}
 				<div className="flex flex-row overflow-auto dark-scrollbar">
 					{connection?.map((i, index) => (
 						<div key={index} className="flex flex-row text-xs text-white border-r border-zinc-800">
@@ -87,7 +111,8 @@ export default function TerminalFile({terminal, setTerminal, onClear, onClose, o
 					</button>
 				</div>
 			</div>
-			<div ref={terminalRef} className="border-t-0 border-zinc-800 flex flex-col overflow-auto hide-scrollbar p-2 text-xs leading-4">
+			{option == "terminal" ?
+			<div ref={handleScroll} className="border-t-0 border-zinc-800 flex flex-col overflow-auto hide-scrollbar p-2 text-xs leading-4">
 				{terminal.map((line, index) => (
 					<div
 						key={index}
@@ -127,6 +152,94 @@ export default function TerminalFile({terminal, setTerminal, onClear, onClose, o
 					</button>
 				</div>
 			</div>
+			:
+			<RawOutput output={output}/>
+			}
 		</section>
 	);
 }
+
+const RawOutput = function({output}){
+	const [raw, setRaw] = useState(false);
+	const {ref: outputRef, handleScroll} = useAutoScroll(output);
+	return(
+		<div ref={outputRef} onScroll={handleScroll} className="h-full overflow-auto dark-scrollbar">
+			<div className="sticky flex h-fit top-0 z-10 p-1">
+				<button className={`ml-auto px-2 py-1 text-xs font-inter rounded-sm transition-colors
+						${raw
+							? "bg-orange-600/50 text-white"
+							: "bg-purple-600/50 text-white"
+						}
+					`}
+					onClick={() => setRaw((prev) => !prev)}
+				>
+					{raw ? "JSON" : "TABLE"}
+				</button>
+			</div>
+			{output?.length > 0 ? (
+				<div className="p-2 pb-8 flex flex-col gap-1">
+					{output.map((item, index) => (
+						<div key={index} className="mb-3">
+							{raw ? (
+								<pre className="text-xs text-zinc-300">
+									{JSON.stringify(item, null, 2)}
+								</pre>
+							) : (
+								<div className="text-xs font-mono">
+									{Object.entries(item.data || item).map(
+										([key, value]) => (
+											<div key={key} className="flex gap-1">
+												<span className="text-purple-400">
+													{key}:
+												</span>
+												<span className="text-zinc-300">
+													{typeof value === "object"
+														? JSON.stringify(value)
+														: String(value)}
+												</span>
+											</div>
+										)
+									)}
+								</div>
+							)}
+						</div>
+					))}
+				</div>
+			) : (
+				<div className="h-full bg-zinc-800/20 flex items-center justify-center">
+					<div className="text-zinc-500 text-sm">
+						No Output
+					</div>
+				</div>
+			)}
+		</div>
+	)
+}
+
+
+const useAutoScroll = (dependency) => {
+	const ref = useRef(null);
+	const [autoScroll, setAutoScroll] = useState(true);
+
+	const handleScroll = () => {
+		if (!ref.current) return;
+
+		const distance =
+			ref.current.scrollHeight -
+			ref.current.scrollTop -
+			ref.current.clientHeight;
+
+		setAutoScroll(distance < 20);
+	};
+
+	useEffect(() => {
+		if (!ref.current || !autoScroll) return;
+
+		ref.current.scrollTop = ref.current.scrollHeight;
+	}, [dependency, autoScroll]);
+
+	return {
+		ref,
+		handleScroll,
+	};
+};

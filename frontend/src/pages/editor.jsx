@@ -25,6 +25,7 @@ const Editor = function ({user}) {
 	const [currentDevice, setCurrentDevice] = useState(null);
 	const [trigger, setTrigger] = useState(0);
 	const [fileTrigger, setFileTrigger] = useState(0);
+	const [output, setOutput] = useState([]);
 	const notify = useNotify();
 
 	const getIotFiles = async function(path="", operation="list_folder", type="filesystem"){
@@ -106,6 +107,9 @@ const Editor = function ({user}) {
 						}
 					}
 					else if(type == "error") notify({type: data.type, message: data.data});
+					else {
+						setOutput((e) => ([...e, data]));
+					}
 				},
 				(connected) => {
 					console.log("Terminal connection:", connected);
@@ -243,7 +247,7 @@ const Editor = function ({user}) {
 						onSend={handleTerminalInput}
 						iotConn={iotConn}
 						backend={backend}
-						openTerminal={openTerminal}
+						output={output}
 					/>
 				</div>
 				}

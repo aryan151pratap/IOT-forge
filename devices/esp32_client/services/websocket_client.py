@@ -23,7 +23,19 @@ class WebSocketClient:
             await self.ws.send(ujson.dumps(data))
 
     async def receive(self):
-        return await self.ws.recv()
+        data = await self.ws.recv()
+
+        if data is None:
+            print("WebSocket received None")
+            return None
+
+        if isinstance(data, memoryview):
+            data = data.tobytes()
+
+        if isinstance(data, bytes):
+            data = data.decode("utf-8")
+
+        return data
 
     async def close(self):
         if self.ws:

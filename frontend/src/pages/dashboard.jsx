@@ -31,7 +31,7 @@ const Dashboard = () => {
     return (
         <div
             ref={containerRef}
-            className="z-2 flex flex-row h-full min-h-0 min-w-0 w-full overflow-hidden"
+            className="flex flex-row h-full min-h-0 min-w-0 w-full overflow-hidden"
         >
             <div className="h-full z-10 min-h-0 min-w-0 flex-1 overflow-hidden">
                 <Editor user={userdata} />

@@ -10,6 +10,7 @@ class Device:
 
     async def send_json(self, data):
         await self.client.send_json({
+            "type": "runner_data",
             "data": data
         })
 

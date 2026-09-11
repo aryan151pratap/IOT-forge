@@ -57,7 +57,7 @@ export default function TerminalFile({terminal, setTerminal, onClear, onClose, o
 
 	return (
 		<section onClick={handleParentClick} className="relative group font-mono h-full flex flex-1 flex-col border-zinc-800 bg-[#09090b] oveflow-auto">
-			<div className="flex shrink-0 items-center border-zinc-800 bg-[#111113] overflow-auto hide-scrollbar">
+			<div className="flex shrink-0 items-center bg-[#111113] overflow-auto hide-scrollbar">
 				<div className="flex items-center gap-5 h-full  px-2 border-r border-zinc-800">
 					<div className="flex items-center gap-2 text-xs text-white">
 						<FiTerminal size={14} />
@@ -67,11 +67,9 @@ export default function TerminalFile({terminal, setTerminal, onClear, onClose, o
 				<div className="flex flex-row overflow-auto dark-scrollbar">
 					{connection?.map((i, index) => (
 						<div key={index} className="flex flex-row text-xs text-white border-r border-zinc-800">
-							{i?.device_id &&
-								<div className="uppercase p-1 bg-zinc-500/10 border-r border-zinc-800">
-									{i?.device_id}
-								</div>
-							}
+							<div className="uppercase p-1 bg-zinc-500/10 border-r border-zinc-800">
+								{i?.device_id ? i?.device_id : "Device"}
+							</div>
 							{i?.status ? 
 								<div className="capitalize text-green-500 p-1 bg-green-500/10">connected</div>
 								:
@@ -80,22 +78,16 @@ export default function TerminalFile({terminal, setTerminal, onClear, onClose, o
 						</div>
 					))}
 				</div>
-				<div className="flex items-center gap-1 ml-auto px-2">
-					<button
-						onClick={onClear}
-						className="rounded p-1.5 text-zinc-500 transition hover:bg-zinc-800 hover:text-white"
-					>
-						<FiTrash2 size={14} />
-					</button>
+				<div className="flex items-center gap-1 ml-auto">
 					<button
 						onClick={onClose}
-						className="rounded p-1.5 text-zinc-500 transition hover:bg-zinc-800 hover:text-white"
+						className="p-1.5 text-zinc-500 transition hover:bg-zinc-800 hover:text-white"
 					>
 						<FiX size={14} />
 					</button>
 				</div>
 			</div>
-			<div ref={terminalRef} className="flex flex-col overflow-auto hide-scrollbar p-2 text-xs leading-4">
+			<div ref={terminalRef} className="border-t-0 border-zinc-800 flex flex-col overflow-auto hide-scrollbar p-2 text-xs leading-4">
 				{terminal.map((line, index) => (
 					<div
 						key={index}

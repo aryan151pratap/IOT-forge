@@ -11,8 +11,27 @@ from config import (WIFI_SSID, WIFI_PASSWORD, WS_SERVER, DEVICE_NAME, SEND_INTER
 from services.device_id import get_device_id
 from services.terminal import Terminal
 from services.response import handleResponse
+from services.runner_manager import runner_manager
+
 DEVICE_ID = get_device_id()
 
+async def receive_loop(client, terminal):
+    while True:
+        response = await client.receive()
+        try:
+            response = json.loads(response)
+        except Exception as e:
+            print("Invalid JSON:", e)
+            continue
+        message_type = response.get("type")
+        if message_type == "runner":
+            runner_manager.handle_message(response)
+        else:
+            await handleResponse(
+                client,
+                terminal,
+                response
+            )
 
 async def run_client(wifi, terminal):
     client = WebSocketClient(WS_SERVER)
@@ -27,24 +46,18 @@ async def run_client(wifi, terminal):
         })
         response = await client.receive()
         print("Register response:", response)
-        while True:
-            response = await client.receive()
-            try:
-                response = json.loads(response)
-            except Exception as e:
-                print("Invalid JSON:", e)
-                continue
-            await handleResponse(client, terminal, response)
-            await asyncio.sleep(0)
+        await runner_manager.start(client)
+        await receive_loop(client, terminal)
 
     except Exception as e:
         print("WebSocket connection lost:", e)
     finally:
         try:
-            client.close()
+            await runner_manager.stop()
+            await client.close()
+            print("WebSocket closed")
         except Exception:
             pass
-        print("WebSocket closed")
 
 
 async def main():

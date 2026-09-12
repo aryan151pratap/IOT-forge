@@ -44,7 +44,6 @@ const WriteFile = function ({ activeFile, currentDevice, setFileTrigger }) {
 			setError(err?.message || "Failed to save file");
 		} finally {
 			setSaving(false);
-			setFileTrigger(e => e+1);
 		}
 	};
 

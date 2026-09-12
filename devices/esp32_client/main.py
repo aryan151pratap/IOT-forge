@@ -26,8 +26,6 @@ async def receive_loop(client, terminal):
             error_message = {
                 "type": "runner",
                 "message": str(e),
-                "response_type": str(type(response)),
-                "response": str(response),
             }
 
             print("Invalid JSON:", e)
@@ -42,18 +40,24 @@ async def receive_loop(client, terminal):
         if message_type == "runner":
             runner_manager.handle_message(response)
         else:
-            await handleResponse(
-                client,
-                terminal,
-                response
-            )
+            try:
+                await handleResponse(client, terminal, response)
+            except Exception as e:
+                print("handleResponse error:", e)
+                try:
+                    await client.send_json({
+                        "type": "runner",
+                        "message": str(e),
+                        "response_type": "handler_error",
+                    })
+                except Exception as send_error:
+                    print("Failed to send error:", send_error)
 
 async def run_client(wifi, terminal):
     client = WebSocketClient(WS_SERVER)
     try:
         print("Connecting to WebSocket server:", WS_SERVER)
         await client.connect()
-        print("WebSocket connected")
         await client.send_json({
             "type": "register",
             "device_id": DEVICE_ID,

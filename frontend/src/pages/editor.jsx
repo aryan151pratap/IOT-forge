@@ -1,4 +1,4 @@
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import EditorFile from "../components/Device-IDE/EditorFile";
 import FileExplorer from "../components/Device-IDE/fileExplorer";
 import TerminalFile from "../components/Device-IDE/Terminal";
@@ -9,6 +9,7 @@ import { userData } from "../services/user.js";
 import { useNotify } from "../components/Device-IDE/notify.jsx";
 import WriteFile from "../components/Device-IDE/writefile.jsx";
 import EmptyEditor from "../components/Device-IDE/emptyEditor.jsx";
+import { handleMouseDownHeight } from "../services/silde.js";
 
 const lang = {py: "python", txt: "text", css: "css", html: "html", java: "java", js: "javascript"};
 const Editor = function ({user}) {
@@ -26,6 +27,9 @@ const Editor = function ({user}) {
 	const [trigger, setTrigger] = useState(0);
 	const [fileTrigger, setFileTrigger] = useState(0);
 	const [output, setOutput] = useState([]);
+
+	const terminalRef = useRef(null);
+	const [terminalHeight, setTerminalHeight] = useState(250);
 	const notify = useNotify();
 
 	const getIotFiles = async function(path="", operation="list_folder", type="filesystem"){
@@ -216,7 +220,7 @@ const Editor = function ({user}) {
 				}
 			</div>
 
-			<div className="group flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+			<div ref={terminalRef} className="group flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
 				<div className="w-full flex flex-col items-center">
 					<FileHeader 
 						files={files} openExplorer={openExplorer} setOpenExplorer={setOpenExplorer}
@@ -225,31 +229,46 @@ const Editor = function ({user}) {
 					/>
 					<WriteFile activeFile={activeFile} currentDevice={currentDevice} setFileTrigger={setFileTrigger}/>
 				</div>
-				<div className="min-h-0 flex-1 overflow-hidden">
+				<div className="flex min-h-0 flex-1">
 					{activeFile ?
-					<EditorFile
-						file={activeFile}
-						onChange={handleEditorChange}
-					/>
+					<div className="min-h-0 flex-1 overflow-hidden hover:border-zinc-500/50">
+						<EditorFile
+							file={activeFile}
+							onChange={handleEditorChange}
+						/>
+					</div>
 					:
 					<div className="h-full w-full">
 						<EmptyEditor currentDevice={currentDevice} iotConn={iotConn}/>
 					</div>
 					}
 				</div>
+				
 				{openTerminal &&
-				<div className="h-[40%] min-h-0 overflow-hidden">
-					<TerminalFile
-						terminal={terminal}
-						setTerminal={setTerminal}
-						onClear={handleClearTerminal}
-						onClose={handleCloseTerminal}
-						onSend={handleTerminalInput}
-						iotConn={iotConn}
-						backend={backend}
-						output={output}
-					/>
-				</div>
+				<>
+					<div onMouseDown={(e) => handleMouseDownHeight(e, terminalRef, setTerminalHeight)}
+						className="group h-1 shrink-0 cursor-row-resize flex items-center p-[1px]"
+					>
+						<div className="w-full border border-zinc-500/40 group hover:border-purple-500"></div>
+					</div>
+					<div 
+						ref={terminalRef}
+						style={{ height: `${terminalHeight}px` }}
+						className="shrink-0 overflow-auto"
+					>
+						<TerminalFile
+							terminal={terminal}
+							setTerminal={setTerminal}
+							onClear={handleClearTerminal}
+							onClose={handleCloseTerminal}
+							onSend={handleTerminalInput}
+							iotConn={iotConn}
+							backend={backend}
+							output={output}
+							setOutput={setOutput}
+						/>
+					</div>
+				</>
 				}
 				
 			</div>

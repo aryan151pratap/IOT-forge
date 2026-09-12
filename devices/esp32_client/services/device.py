@@ -1,11 +1,12 @@
 import uasyncio as asyncio
+from collections import deque
 
 class Device:
-    __slots__ = ('client', '_message', '_event')
+    __slots__ = ('client', '_messages', '_event')
 
-    def __init__(self, client):
+    def __init__(self, client, maxlen=5):
         self.client = client
-        self._message = None
+        self._messages = deque((), maxlen, 1)
         self._event = asyncio.Event()
 
     async def send_json(self, data):
@@ -15,21 +16,23 @@ class Device:
         })
 
     async def receive_json(self):
-        await self._event.wait()
-        data = self._message
-        self._message = None
-        self._event.clear()
+        while not self._messages:
+            self._event.clear()
+            await self._event.wait()
+        data = self._messages.popleft()
+        if not self._messages:
+            self._event.clear()
         return data
 
     def set_message(self, data):
-        self._message = data
+        self._messages.append(data)
         self._event.set()
 
 device = None
 
-def init(client):
+def init(client, maxlen=5):
     global device
-    device = Device(client)
+    device = Device(client, maxlen)
 
 async def send_json(data):
     await device.send_json(data)

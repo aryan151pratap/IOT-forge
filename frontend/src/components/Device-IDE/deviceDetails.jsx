@@ -21,9 +21,9 @@ const DeviceDetails = function({devices, setCurrentDevice, currentDevice}){
 					const conn = i.status === "online" && currentDevice == i.device_id;
 					return (<div key={index} className="h-fit flex flex-col">
 						<div className="h-full w-full capitalize flex flex-row items-center border-r border-zinc-800">
-							<div className={`border-r-0 ${i.status === "online" ? "bg-sky-400/10 border-zinc-800" : "bg-red-400/10 border-zinc-800"} p-1`}>
+							<div className={`shrink-0 border-r-0 ${i.status === "online" ? "bg-sky-400/10 border-zinc-800" : "bg-red-400/10 border-zinc-800"} p-1`}>
 								{i.status === "online" ?
-									<BsWifi className="text-sky-500 h-4 w-4"/>
+									<BsWifi className="text-sky-500 h-4 w-5"/>
 									:
 									<BsWifiOff className="text-red-500 h-4 w-5"/>			
 								}

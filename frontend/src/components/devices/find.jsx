@@ -10,7 +10,8 @@ const Find = ({devices, addingId, setAddingId}) => {
 			<h2 className="w-fit border-b-2 border-zinc-100/0 group-hover:border-orange-500/80 group-hover:text-zinc-400 transition-colors mb-4 font-semibold tracking-wide text-zinc-500">
 				Available Devices
 			</h2>
-			{(<div className="w-full h-full flex overflow-auto scrollbar-thin">
+			{devices.length > 0 ?
+				(<div className="w-full h-full flex overflow-auto scrollbar-thin">
 					{devices.map((d) => {
 						const added = addedIds.has(d.device_id);
 						const label = added || d.user_id ? "Added" : addingId === d.device_id ? "Adding…" : "Add";
@@ -33,8 +34,12 @@ const Find = ({devices, addingId, setAddingId}) => {
 							</div>
 						);
 					})}
-				</div>
-			)}
+				</div>)
+			:
+			<div className="px-5 text-zinc-400/40 bg-zinc-800/20 p-7">
+				No online devices
+			</div>
+			}
 		</div>
 	);
 };

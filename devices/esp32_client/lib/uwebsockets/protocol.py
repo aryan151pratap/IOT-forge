@@ -48,33 +48,25 @@ URI = namedtuple(
     )
 )
 
-
 class NoDataException(Exception):
     pass
-
 
 class ConnectionClosed(Exception):
     pass
 
-
 def urlparse(uri):
-
     match = URL_RE.match(uri)
-
     if match:
-
         protocol = match.group(1)
         host = match.group(2)
         port = match.group(3)
         path = match.group(4)
 
         if protocol == "wss":
-
             if port is None:
                 port = 443
 
         elif protocol == "ws":
-
             if port is None:
                 port = 80
 
@@ -92,83 +84,61 @@ def urlparse(uri):
 
 
 class Websocket:
-
     is_client = False
-
     def __init__(self, reader, writer):
-
         self.reader = reader
         self.writer = writer
         self.open = True
 
     async def read_exactly(self, size):
-
         data = bytearray()
-
         while len(data) < size:
-
             chunk = await self.reader.read(
                 size - len(data)
             )
-
             if not chunk:
                 raise NoDataException
 
             data.extend(chunk)
-
         return bytes(data)
 
     async def read_frame(self, max_size=None):
-
         two_bytes = await self.read_exactly(2)
-
         byte1, byte2 = struct.unpack(
             "!BB",
             two_bytes
         )
-
         fin = bool(byte1 & 0x80)
         opcode = byte1 & 0x0f
-
         mask = bool(byte2 & 0x80)
         length = byte2 & 0x7f
 
         if length == 126:
-
             data = await self.read_exactly(2)
-
             length, = struct.unpack(
                 "!H",
                 data
             )
 
         elif length == 127:
-
             data = await self.read_exactly(8)
-
             length, = struct.unpack(
                 "!Q",
                 data
             )
 
         if max_size is not None and length > max_size:
-
             await self.close(
                 code=CLOSE_TOO_BIG
             )
-
             return True, OP_CLOSE, None
 
         mask_bits = None
-
         if mask:
-
             mask_bits = await self.read_exactly(4)
-
         data = await self.read_exactly(length)
 
         if mask:
-
             data = bytes(
                 b ^ mask_bits[i % 4]
                 for i, b in enumerate(data)
@@ -184,18 +154,13 @@ class Websocket:
 
         fin = True
         mask = self.is_client
-
         length = len(data)
-
         byte1 = 0x80 if fin else 0
         byte1 |= opcode
-
         byte2 = 0x80 if mask else 0
 
         if length < 126:
-
             byte2 |= length
-
             header = struct.pack(
                 "!BB",
                 byte1,
@@ -203,9 +168,7 @@ class Websocket:
             )
 
         elif length < (1 << 16):
-
             byte2 |= 126
-
             header = struct.pack(
                 "!BBH",
                 byte1,
@@ -214,9 +177,7 @@ class Websocket:
             )
 
         elif length < (1 << 64):
-
             byte2 |= 127
-
             header = struct.pack(
                 "!BBQ",
                 byte1,
@@ -232,44 +193,33 @@ class Websocket:
         self.writer.write(header)
 
         if mask:
-
             mask_bits = struct.pack(
                 "!I",
                 random.getrandbits(32)
             )
-
             self.writer.write(mask_bits)
-
             data = bytes(
                 b ^ mask_bits[i % 4]
                 for i, b in enumerate(data)
             )
 
         self.writer.write(data)
-
         await self.writer.drain()
 
     async def recv(self):
-
         if not self.open:
             raise ConnectionClosed()
 
         while self.open:
-
             try:
-
                 fin, opcode, data = await self.read_frame()
 
             except NoDataException:
-
                 self._close()
-
                 raise ConnectionClosed()
 
             except ValueError:
-
                 self._close()
-
                 raise ConnectionClosed()
 
             if not fin:
@@ -278,40 +228,31 @@ class Websocket:
                 )
 
             if opcode == OP_TEXT:
-
                 return data.decode("utf-8")
 
             elif opcode == OP_BYTES:
-
                 return data
 
             elif opcode == OP_CLOSE:
-
                 await self.close()
-
                 return None
 
             elif opcode == OP_PONG:
-
                 continue
 
             elif opcode == OP_PING:
-
                 await self.write_frame(
                     OP_PONG,
                     data
                 )
-
                 continue
 
             elif opcode == OP_CONT:
-
                 raise NotImplementedError(
                     "Continuation frames"
                 )
 
             else:
-
                 raise ValueError(
                     opcode
                 )
@@ -322,16 +263,13 @@ class Websocket:
             raise ConnectionClosed()
 
         if isinstance(buf, str):
-
             opcode = OP_TEXT
             buf = buf.encode("utf-8")
 
         elif isinstance(buf, bytes):
-
             opcode = OP_BYTES
 
         else:
-
             raise TypeError(
                 "WebSocket data must be str or bytes"
             )
@@ -356,7 +294,6 @@ class Websocket:
         )
 
         try:
-
             await self.write_frame(
                 OP_CLOSE,
                 buf

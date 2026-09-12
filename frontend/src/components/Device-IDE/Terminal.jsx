@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { FiTerminal, FiTrash2, FiX } from "react-icons/fi";
 import { getPreviousHistory, getNextHistory } from "../../services/history.js"; 
-import { FaTimes } from "react-icons/fa";
+import { FaRunning, FaTimes } from "react-icons/fa";
 import { FileOutput } from "lucide-react";
+import { VscBook, VscRunCompact, VscStopCircle } from "react-icons/vsc";
+import { handleMouseDown } from "../../services/silde.js";
 
-export default function TerminalFile({terminal, setTerminal, onClear, onClose, onSend, iotConn, backend, output}) {
+export default function TerminalFile({terminal, setTerminal, onClear, onClose, onSend, iotConn, backend, output, setOutput}) {
 	const [input, setInput] = useState(""); 
 	const inputRef = useRef(null); 
 	const {ref: terminalRef, handleScroll} = useAutoScroll(terminal);
@@ -12,6 +14,9 @@ export default function TerminalFile({terminal, setTerminal, onClear, onClose, o
 	const [historyIndex, setHistoryIndex] = useState(-1);
 	const [connection, setConnection] = useState();
 	const [option, setOption] = useState("terminal");
+	const [side, setSide] = useState(false);
+	const containerRef = useRef(null);
+	const [outputWidth, setOutputWidth] = useState(260);
 	
 	const options = [
 		{
@@ -65,8 +70,8 @@ export default function TerminalFile({terminal, setTerminal, onClear, onClose, o
     };
 
 	return (
-		<section onClick={handleParentClick} className="relative group font-mono h-full flex flex-1 flex-col border-zinc-800 bg-[#09090b] oveflow-auto">
-			<div className="flex shrink-0 items-center bg-[#111113] overflow-auto hide-scrollbar">
+		<section onClick={handleParentClick} className="relative group font-mono h-full min-h-0 flex flex-col border-zinc-800 bg-[#09090b] overflow-auto">
+			<div className="h-fit w-full flex shrink-0 items-center bg-[#111113] overflow-auto hide-scrollbar">
 				{options.map((item) => (
 					<div
 						key={item.id}
@@ -74,13 +79,12 @@ export default function TerminalFile({terminal, setTerminal, onClear, onClose, o
 						className={`
 							flex items-center gap-5 h-full px-2
 							border-r border-zinc-800 cursor-pointer
-							${option === item.id ? "bg-zinc-900" : ""}
+							${option === item.id && !side ? "bg-zinc-900 text-white" : "text-zinc-500"}
 						`}
 					>
 						<div
 							className={`
 								flex items-center gap-2 text-xs
-								${option === item.id ? "text-white" : "text-zinc-500"}
 							`}
 						>
 							{item.icon}
@@ -88,7 +92,14 @@ export default function TerminalFile({terminal, setTerminal, onClear, onClose, o
 						</div>
 					</div>
 				))}
-				<div className="flex flex-row overflow-auto dark-scrollbar">
+				<div className="h-full border-r border-zinc-800 flex text-white">
+					<button className={`${!side ? "bg-zinc-500/20 text-zinc-400 hover:text-white" : "bg-purple-500/50 text-white"} flex items-center px-2`}
+						onClick={() => setSide(e => !e)}
+					>
+						<VscBook/>
+					</button>
+				</div>
+				<div className="flex flex-row overflow-auto hide-scrollbar">
 					{connection?.map((i, index) => (
 						<div key={index} className="flex flex-row text-xs text-white border-r border-zinc-800">
 							<div className="uppercase p-1 bg-zinc-500/10 border-r border-zinc-800">
@@ -111,73 +122,78 @@ export default function TerminalFile({terminal, setTerminal, onClear, onClose, o
 					</button>
 				</div>
 			</div>
-			{option == "terminal" ?
-			<div ref={handleScroll} className="border-t-0 border-zinc-800 flex flex-col overflow-auto hide-scrollbar p-2 text-xs leading-4">
-				{terminal.map((line, index) => (
-					<div
-						key={index}
-						className={`flex gap-1 break-all ${line.type == "error"
-								? "text-red-400"
-								: line.type == 'terminal_input'
-									? "text-zinc-300"
-									: line?.color ? `w-fit text-${line.color}-500 bg-${line.color}-500/20 p-1 mb-1 border-l border-r border-zinc-700` : "text-zinc-400"}
-						`}
-					>
-						{line.type == "terminal_input" && 
-							<span className="text-blue-500 flex gap-2">
-								<span>{iotConn?.device_id}</span>
-								<span>$</span>
-							</span>
-						}
-						<pre className="flex text-wrap break-words break-all">{line?.data}</pre>
+			<div ref={containerRef} className={`p-1 flex flex-row flex-1 min-h-0 w-full`}>
+				<div ref={terminalRef} onScroll={handleScroll} 
+					style={{
+						width: side ? `calc(100% - ${outputWidth}px - 4px)` : "100%",
+					}}
+					className={`${option == "terminal" || side ? "flex" : "hidden"} h-full w-full border border-zinc-800 rounded-md flex flex-col overflow-auto hide-scrollbar p-2 text-xs leading-4`}
+				>
+					{terminal.map((line, index) => (
+						<div
+							key={index}
+							className={`flex gap-1 break-all ${line.type == "error"
+									? "text-red-400"
+									: line.type == 'terminal_input'
+										? "text-zinc-300"
+										: line?.color ? `w-fit text-${line.color}-500 bg-${line.color}-500/20 p-1 mb-1 border-l border-r border-zinc-700` : "text-zinc-400"}
+							`}
+						>
+							{line.type == "terminal_input" && 
+								<span className="text-blue-500 flex gap-2">
+									<span>{iotConn?.device_id}</span>
+									<span>$</span>
+								</span>
+							}
+							<pre className="flex text-wrap break-words break-all">{line?.data}</pre>
+						</div>
+					))}
+					<div className="h-full flex gap-2"> 
+						<span className="text-green-500/50">{iotConn?.device_id}</span>
+						<span className="text-green-400">$</span> 
+						<textarea ref={inputRef} value={input} 
+							onChange={(event) => setInput(event.target.value)} 
+							onKeyDown={handleKeyDown} 
+							autoFocus 
+							rows={10}
+							className="h-full resize-none flex-1 bg-transparent text-zinc-300 outline-none dark-scrollbar" 
+							spellCheck={false} 
+						/> 
 					</div>
-				))}
-				<div className="h-full flex gap-2"> 
-					<span className="text-green-500/50">{iotConn?.device_id}</span>
-					<span className="text-green-400">$</span> 
-					<textarea ref={inputRef} value={input} 
-						onChange={(event) => setInput(event.target.value)} 
-						onKeyDown={handleKeyDown} 
-						autoFocus 
-						rows={10}
-						className="h-full resize-none flex-1 bg-transparent text-zinc-300 outline-none dark-scrollbar" 
-						spellCheck={false} 
-					/> 
+					<div className="group-hover:flex hidden absolute bottom-2 left-2 transition duration-300">
+						<button className="flex flex-row items-center gap-1 bg-zinc-800/50 text-zinc-500 hover:bg-purple-600 hover:text-white px-2 p-1 font-inter"
+							onClick={onClear}
+						>
+							clear
+						</button>
+					</div>
 				</div>
-				<div className="group-hover:flex hidden absolute bottom-2 right-2 transition duration-300">
-					<button className="flex flex-row items-center gap-1 bg-zinc-800/50 text-zinc-500 hover:bg-purple-600 hover:text-white px-2 p-1 font-inter"
-						onClick={onClear}
-					>
-						clear
-					</button>
+				{side && (
+					<div
+						onMouseDown={(e) => handleMouseDown(e, containerRef, setOutputWidth)}
+						className="w-1 h-full shrink-0 cursor-col-resize"
+					/>
+				)}
+				<div 
+					style={{
+						width: side ? `${outputWidth}px` : "100%",
+					}}
+					className={`${option == "output" || side ? "flex" : "hidden"} flex flex-col w-full h-full`}
+				>
+					<RawOutput output={output} setOutput={setOutput}/>
 				</div>
 			</div>
-			:
-			<RawOutput output={output}/>
-			}
 		</section>
 	);
 }
 
-const RawOutput = function({output}){
+const RawOutput = function({output, setOutput}){
 	const [raw, setRaw] = useState(false);
 	const {ref: outputRef, handleScroll} = useAutoScroll(output);
 	return(
-		<div ref={outputRef} onScroll={handleScroll} className="h-full overflow-auto dark-scrollbar">
-			<div className="sticky flex h-fit top-0 z-10 p-1">
-				<button className={`ml-auto px-2 py-1 text-xs font-inter rounded-sm transition-colors
-						${raw
-							? "bg-orange-600/50 text-white"
-							: "bg-purple-600/50 text-white"
-						}
-					`}
-					onClick={() => setRaw((prev) => !prev)}
-				>
-					{raw ? "JSON" : "TABLE"}
-				</button>
-			</div>
+		<div className="w-full h-full flex flex-col border border-zinc-800 rounded-md overflow-auto">
 			{output?.length > 0 ? (
-				<div className="p-2 pb-8 flex flex-col gap-1">
+				<div ref={outputRef} onScroll={handleScroll} className="h-full overflow-auto dark-scrollbar p-2 pb-8 flex flex-col gap-1">
 					{output.map((item, index) => (
 						<div key={index} className="mb-3">
 							{raw ? (
@@ -206,12 +222,37 @@ const RawOutput = function({output}){
 					))}
 				</div>
 			) : (
-				<div className="h-full bg-zinc-800/20 flex items-center justify-center">
+				<div className="h-full bg-zinc-800/10 font-inter flex items-center justify-center">
 					<div className="text-zinc-500 text-sm">
 						No Output
 					</div>
 				</div>
 			)}
+			<div className="w-full h-fit bg-black p-1 border-t border-zinc-800/60">
+				<div className="text-xs font-inter flex flex-row gap-1 text-white">
+					<button className="px-2 p-0.5 bg-zinc-500/20 hover:bg-purple-600/60">
+						<VscRunCompact/>
+					</button>
+					<button className="px-2 p-0.5 bg-zinc-500/20 hover:bg-red-600/60">
+						stop
+					</button>
+					<button className="ml-auto text-white bg-zinc-500/20 px-2 p-0.5 hover:bg-purple-600/60 cursor-pointer"
+						onClick={() => setOutput([])}
+					>
+						clear
+					</button>
+					<button className={`px-2 py-0.5 text-xs font-inter transition-colors
+							${raw
+								? "bg-orange-600/50 text-white"
+								: "bg-purple-600/50 text-white"
+							}
+						`}
+						onClick={() => setRaw((prev) => !prev)}
+					>
+						{raw ? "json" : "text"}
+					</button>
+				</div>
+			</div>
 		</div>
 	)
 }

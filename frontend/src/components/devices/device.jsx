@@ -70,7 +70,7 @@ const Devices = function(){
 					<div className="w-fit">
 						<h2 className="border-b-2 border-zinc-100/0 group-hover:border-orange-500/80 group-hover:text-zinc-400 transition-colors mb-4 font-semibold tracking-wide text-zinc-500">Added Devices</h2>
 					</div>
-					<div className="w-full flex flex-wrap overflow-auto scrollbar-thin hide-scrollbar">
+					<div className="w-full flex flex-wrap gap-2 overflow-auto scrollbar-thin hide-scrollbar">
 						{addedDevice?.map((i, index) => (
 							<DeviceCard data={i} setTrigger={setTrigger}/>
 						))}

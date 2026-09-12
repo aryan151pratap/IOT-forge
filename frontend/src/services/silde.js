@@ -26,3 +26,34 @@ export const handleMouseDown = (
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
 };
+
+
+export const handleMouseDownHeight = (
+	e,
+	containerRef,
+	setHeight
+) => {
+	e.preventDefault();
+
+	const handleMouseMove = (event) => {
+		const container = containerRef.current;
+
+		if (!container) return;
+
+		const rect = container.getBoundingClientRect();
+
+		const newHeight = rect.bottom - event.clientY;
+
+		setHeight(
+			Math.min(600, Math.max(150, newHeight))
+		);
+	};
+
+	const handleMouseUp = () => {
+		document.removeEventListener("mousemove", handleMouseMove);
+		document.removeEventListener("mouseup", handleMouseUp);
+	};
+
+	document.addEventListener("mousemove", handleMouseMove);
+	document.addEventListener("mouseup", handleMouseUp);
+};
